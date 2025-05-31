@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getPortfolioData, getPortfolioSummary, getWallets, isValidSolanaAddress } from '@/lib/api-client';
+import { getPortfolioData, getPortfolioSummary, getWallets, isValidAddress } from '@/lib/api-client';
 import { PortfolioData, PortfolioSummaryData, WalletInfo } from '@/types/api';
 
 /**
@@ -11,7 +11,7 @@ export function usePortfolio(walletAddress: string) {
   return useQuery<PortfolioData, Error>({
     queryKey: ['portfolio', walletAddress],
     queryFn: () => getPortfolioData(walletAddress),
-    enabled: walletAddress?.length >= 32 && isValidSolanaAddress(walletAddress),
+    enabled: !!walletAddress && (walletAddress.length >= 32 || walletAddress.startsWith('0x')),
     retry: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,

@@ -101,6 +101,49 @@ export async function getKaminoAccounts(walletAddress: string) {
 }
 
 /**
+ * Get Hyperliquid data for a wallet
+ */
+export async function getHyperliquidData(walletAddress: string) {
+  return fetchWithErrorHandling(`/hyperliquid/${walletAddress}`);
+}
+
+/**
+ * Get Hyperliquid historical data for a wallet
+ */
+export async function getHyperliquidHistory(walletAddress: string, timeframe = '7d') {
+  return fetchWithErrorHandling(`/hyperliquid/history/${walletAddress}?timeframe=${timeframe}`);
+}
+
+/**
+ * Get EVM data for a wallet
+ */
+export async function getEvmData(walletAddress: string) {
+  return fetchWithErrorHandling(`/evm/${walletAddress}`);
+}
+
+/**
+ * Validate address format based on chain
+ */
+export function isValidAddress(address: string, chain?: string): boolean {
+  if (!address) return false;
+  
+  // EVM addresses
+  if (chain === 'evm' || address.startsWith('0x')) {
+    const evmRegex = /^0x[a-fA-F0-9]{40}$/;
+    return evmRegex.test(address);
+  }
+  
+  // Hyperliquid addresses (also EVM format)
+  if (chain === 'hyperliquid') {
+    const evmRegex = /^0x[a-fA-F0-9]{40}$/;
+    return evmRegex.test(address);
+  }
+  
+  // Default to Solana
+  return isValidSolanaAddress(address);
+}
+
+/**
  * Validate Solana address format
  */
 export function isValidSolanaAddress(address: string): boolean {

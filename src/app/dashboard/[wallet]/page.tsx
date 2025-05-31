@@ -12,8 +12,11 @@ import TokensTable from '@/components/tokens-table';
 import PositionsTable from '@/components/positions-table';
 import MarginfiTable from '@/components/marginfi-table';
 import KaminoTable from '@/components/kamino-table';
+import HyperliquidTable from '@/components/hyperliquid-table';
+import EvmDashboard from '@/components/evm-dashboard';
 import PortfolioSummaryComponent from '@/components/portfolio-summary';
 import FeeGrowthChart from '@/components/fee-growth-chart';
+import { Badge } from '@/components/ui/badge';
 
 export default function DashboardPage() {
   const { wallet } = useParams() as { wallet: string };
@@ -30,6 +33,15 @@ export default function DashboardPage() {
     toast.success('Address copied to clipboard');
   };
 
+  // Determine wallet type based on data from API and address format as fallback
+  const walletChain = data?.chain || (wallet.startsWith('0x') && wallet.includes('hyper') ? 'hyperliquid' : 
+                      wallet.startsWith('0x') ? 'evm' : 'solana');
+  
+  // Check if we have Hyperliquid data
+  const hasHyperliquidData = data?.hyperliquid_account || (data?.hyperliquid_positions && data.hyperliquid_positions.length > 0);
+  // Check if we have EVM data
+  const hasEvmData = data?.evm_data && data.evm_data.chains && data.evm_data.chains.length > 0;
+
   return (
     <main className="container mx-auto py-6 px-4 md:px-6">
       <div className="mb-6">
@@ -44,6 +56,15 @@ export default function DashboardPage() {
           >
             Copy
           </Button>
+          {walletChain === 'hyperliquid' && (
+            <Badge variant="secondary">Hyperliquid</Badge>
+          )}
+          {walletChain === 'evm' && (
+            <Badge variant="secondary">EVM</Badge>
+          )}
+          {walletChain === 'solana' && (
+            <Badge variant="secondary">Solana</Badge>
+          )}
         </div>
       </div>
 
@@ -60,48 +81,81 @@ export default function DashboardPage() {
         <div className="space-y-6">
           <PortfolioSummaryComponent summary={data.summary} />
           
-          <Tabs defaultValue="tokens" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="tokens">Tokens</TabsTrigger>
-              <TabsTrigger value="whirlpool">Whirlpool</TabsTrigger>
-              <TabsTrigger value="raydium">Raydium</TabsTrigger>
-              <TabsTrigger value="marginfi">Marginfi</TabsTrigger>
-              <TabsTrigger value="kamino">Kamino</TabsTrigger>
-              <TabsTrigger value="fees">Fee Growth</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="tokens" className="mt-4">
-              <TokensTable tokens={data.token_balances} />
-            </TabsContent>
-            
-            <TabsContent value="whirlpool" className="mt-4">
-              <PositionsTable 
-                positions={data.whirlpool_positions} 
-                title="Orca Whirlpool Positions" 
-                emptyMessage="No Whirlpool positions found" 
-              />
-            </TabsContent>
-            
-            <TabsContent value="raydium" className="mt-4">
-              <PositionsTable 
-                positions={data.raydium_positions} 
-                title="Raydium Positions" 
-                emptyMessage="No Raydium positions found" 
-              />
-            </TabsContent>
-            
-            <TabsContent value="marginfi" className="mt-4">
-              <MarginfiTable accounts={data.marginfi_accounts} />
-            </TabsContent>
-            
-            <TabsContent value="kamino" className="mt-4">
-              <KaminoTable accounts={data.kamino_accounts} />
-            </TabsContent>
-            
-            <TabsContent value="fees" className="mt-4">
-              <FeeGrowthChart walletAddress={wallet} />
-            </TabsContent>
-          </Tabs>
+          {walletChain === 'evm' && hasEvmData ? (
+            // Render EVM Dashboard for EVM wallets
+            <EvmDashboard data={data.evm_data!} />
+          ) : walletChain === 'hyperliquid' ? (
+            // Render Hyperliquid Dashboard for Hyperliquid wallets
+            <Tabs defaultValue="hyperliquid" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="hyperliquid">Hyperliquid</TabsTrigger>
+                <TabsTrigger value="tokens">Tokens</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="hyperliquid" className="mt-4">
+                <HyperliquidTable 
+                  account={data.hyperliquid_account} 
+                  positions={data.hyperliquid_positions || []} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="tokens" className="mt-4">
+                <TokensTable tokens={data.token_balances} />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            // Render standard Solana dashboard for Solana wallets
+            <Tabs defaultValue="tokens" className="w-full">
+              <TabsList className="grid w-full grid-cols-7">
+                <TabsTrigger value="tokens">Tokens</TabsTrigger>
+                <TabsTrigger value="whirlpool">Whirlpool</TabsTrigger>
+                <TabsTrigger value="raydium">Raydium</TabsTrigger>
+                <TabsTrigger value="marginfi">Marginfi</TabsTrigger>
+                <TabsTrigger value="kamino">Kamino</TabsTrigger>
+                <TabsTrigger value="hyperliquid">Hyperliquid</TabsTrigger>
+                <TabsTrigger value="fees">Fee Growth</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="tokens" className="mt-4">
+                <TokensTable tokens={data.token_balances} />
+              </TabsContent>
+              
+              <TabsContent value="whirlpool" className="mt-4">
+                <PositionsTable 
+                  positions={data.whirlpool_positions} 
+                  title="Orca Whirlpool Positions" 
+                  emptyMessage="No Whirlpool positions found" 
+                />
+              </TabsContent>
+              
+              <TabsContent value="raydium" className="mt-4">
+                <PositionsTable 
+                  positions={data.raydium_positions} 
+                  title="Raydium Positions" 
+                  emptyMessage="No Raydium positions found" 
+                />
+              </TabsContent>
+              
+              <TabsContent value="marginfi" className="mt-4">
+                <MarginfiTable accounts={data.marginfi_accounts} />
+              </TabsContent>
+              
+              <TabsContent value="kamino" className="mt-4">
+                <KaminoTable accounts={data.kamino_accounts} />
+              </TabsContent>
+              
+              <TabsContent value="hyperliquid" className="mt-4">
+                <HyperliquidTable 
+                  account={data.hyperliquid_account} 
+                  positions={data.hyperliquid_positions || []} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="fees" className="mt-4">
+                <FeeGrowthChart walletAddress={wallet} />
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       ) : (
         <div className="flex justify-center p-12">
