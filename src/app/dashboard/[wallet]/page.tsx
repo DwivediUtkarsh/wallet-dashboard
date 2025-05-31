@@ -37,8 +37,6 @@ export default function DashboardPage() {
   const walletChain = data?.chain || (wallet.startsWith('0x') && wallet.includes('hyper') ? 'hyperliquid' : 
                       wallet.startsWith('0x') ? 'evm' : 'solana');
   
-  // Check if we have Hyperliquid data
-  const hasHyperliquidData = data?.hyperliquid_account || (data?.hyperliquid_positions && data.hyperliquid_positions.length > 0);
   // Check if we have EVM data
   const hasEvmData = data?.evm_data && data.evm_data.chains && data.evm_data.chains.length > 0;
 

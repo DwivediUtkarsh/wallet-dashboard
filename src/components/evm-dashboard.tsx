@@ -1,4 +1,13 @@
-import { EvmPortfolioData, EvmChainData, EvmTokenBalance, EvmLendingPosition, EvmLiquidityPosition } from "@/types/api";
+'use client';
+
+import { 
+  EvmPortfolioData, 
+  EvmChainData, 
+  EvmTokenBalance,
+  EvmLendingPosition, 
+  EvmLiquidityPosition,
+  EvmStakingPosition
+} from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDollar, formatNumber } from "@/lib/utils";
@@ -141,7 +150,7 @@ function ChainDashboard({ chain }: ChainDashboardProps) {
                   {chain.token_balances.map((token, index) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{token.symbol}</TableCell>
-                      <TableCell>{formatNumber(token.balance)}</TableCell>
+                      <TableCell>{formatNumber(token.amount)}</TableCell>
                       <TableCell>{formatDollar(token.price_usd)}</TableCell>
                       <TableCell>{formatDollar(token.value_usd)}</TableCell>
                     </TableRow>
@@ -322,8 +331,8 @@ function LiquidityPositionCard({ position }: LiquidityPositionCardProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {position.tokens.map((token, index) => (
-                <TableRow key={index}>
+              {position.tokens.map((token: EvmTokenBalance, index: number) => (
+                <TableRow key={`token-${index}`}>
                   <TableCell>{token.token}</TableCell>
                   <TableCell>{formatNumber(token.amount)}</TableCell>
                   <TableCell>{formatDollar(token.value_usd)}</TableCell>
@@ -348,8 +357,8 @@ function LiquidityPositionCard({ position }: LiquidityPositionCardProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {position.rewards.map((reward, index) => (
-                <TableRow key={index}>
+              {position.rewards.map((reward: EvmTokenBalance, index: number) => (
+                <TableRow key={`reward-${index}`}>
                   <TableCell>{reward.token}</TableCell>
                   <TableCell>{formatNumber(reward.amount)}</TableCell>
                   <TableCell>{formatDollar(reward.value_usd)}</TableCell>
@@ -430,4 +439,4 @@ function StakingPositionCard({ position }: StakingPositionCardProps) {
       )}
     </div>
   );
-} 
+}

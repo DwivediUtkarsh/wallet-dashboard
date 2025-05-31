@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getPortfolioData, getPortfolioSummary, getWallets, isValidAddress } from '@/lib/api-client';
+import { getPortfolioData, getPortfolioSummary, getWallets } from '@/lib/api-client';
 import { PortfolioData, PortfolioSummaryData, WalletInfo } from '@/types/api';
 
 /**

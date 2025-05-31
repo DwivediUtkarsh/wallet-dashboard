@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { WalletInfo } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
-import { formatDate, formatDollar } from "@/lib/utils";
+import { formatDollar } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import {
   Table,
@@ -13,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from '@/components/ui/input';
 
 interface WalletListProps {

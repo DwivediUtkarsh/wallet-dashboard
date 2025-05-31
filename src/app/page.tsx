@@ -1,10 +1,10 @@
 'use client';
 
 import { useWallets, usePortfolioSummary } from '@/hooks/use-portfolio';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import WalletList from '@/components/wallet-list';
 import PortfolioSummaryAggregate from '@/components/portfolio-summary-aggregate';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 

@@ -236,10 +236,9 @@ export interface EvmChainData {
 export interface EvmTokenBalance {
   token: string;
   symbol: string;
-  balance: number;
+  amount: number;
   price_usd: number;
   value_usd: number;
-  updated_at: string;
 }
 
 export interface EvmLendingPosition {
@@ -266,8 +265,8 @@ export interface EvmStakingPosition {
   name: string;
   total_value_usd: number;
   apr: number;
-  tokens: EvmTokenAmount[];
-  rewards: EvmTokenAmount[];
+  tokens: EvmTokenBalance[];
+  rewards: EvmTokenBalance[];
 }
 
 export interface EvmTokenAmount {
@@ -285,4 +284,4 @@ export interface EvmSummary {
   liquidity_value: number;
   staking_value: number;
   token_value: number;
-} 
+}

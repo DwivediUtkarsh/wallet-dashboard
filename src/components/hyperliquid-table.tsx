@@ -1,3 +1,5 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HyperliquidAccount, HyperliquidPosition } from "@/types/api";
 import { formatDollar, formatPercent } from "@/lib/utils";
@@ -125,7 +127,7 @@ export default function HyperliquidTable({ account, positions }: HyperliquidTabl
                     <TableRow key={position.coin}>
                       <TableCell className="font-medium">{position.coin}</TableCell>
                       <TableCell>
-                        <Badge variant={position.is_long ? "success" : "destructive"}>
+                        <Badge variant={position.is_long ? "secondary" : "destructive"}>
                           {position.is_long ? "LONG" : "SHORT"}
                         </Badge>
                       </TableCell>
@@ -148,7 +150,7 @@ export default function HyperliquidTable({ account, positions }: HyperliquidTabl
                             position.risk_level === "high" 
                               ? "destructive" 
                               : position.risk_level === "medium" 
-                                ? "warning" 
+                                ? "outline" 
                                 : "outline"
                           }
                         >
@@ -165,4 +167,4 @@ export default function HyperliquidTable({ account, positions }: HyperliquidTabl
       )}
     </div>
   );
-} 
+}
