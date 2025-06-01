@@ -77,7 +77,7 @@ export default function DashboardPage() {
         </div>
       ) : data ? (
         <div className="space-y-6">
-          <PortfolioSummaryComponent summary={data.summary} />
+          <PortfolioSummaryComponent summary={data.summary} chain={walletChain as 'solana' | 'hyperliquid' | 'evm'} />
           
           {walletChain === 'evm' && hasEvmData ? (
             // Render EVM Dashboard for EVM wallets
@@ -94,6 +94,7 @@ export default function DashboardPage() {
                 <HyperliquidTable 
                   account={data.hyperliquid_account} 
                   positions={data.hyperliquid_positions || []} 
+                  staking={data.hyperliquid_staking}
                 />
               </TabsContent>
               
@@ -104,13 +105,12 @@ export default function DashboardPage() {
           ) : (
             // Render standard Solana dashboard for Solana wallets
             <Tabs defaultValue="tokens" className="w-full">
-              <TabsList className="grid w-full grid-cols-7">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="tokens">Tokens</TabsTrigger>
                 <TabsTrigger value="whirlpool">Whirlpool</TabsTrigger>
                 <TabsTrigger value="raydium">Raydium</TabsTrigger>
                 <TabsTrigger value="marginfi">Marginfi</TabsTrigger>
                 <TabsTrigger value="kamino">Kamino</TabsTrigger>
-                <TabsTrigger value="hyperliquid">Hyperliquid</TabsTrigger>
                 <TabsTrigger value="fees">Fee Growth</TabsTrigger>
               </TabsList>
               
@@ -140,13 +140,6 @@ export default function DashboardPage() {
               
               <TabsContent value="kamino" className="mt-4">
                 <KaminoTable accounts={data.kamino_accounts} />
-              </TabsContent>
-              
-              <TabsContent value="hyperliquid" className="mt-4">
-                <HyperliquidTable 
-                  account={data.hyperliquid_account} 
-                  positions={data.hyperliquid_positions || []} 
-                />
               </TabsContent>
               
               <TabsContent value="fees" className="mt-4">

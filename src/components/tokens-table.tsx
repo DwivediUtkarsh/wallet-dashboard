@@ -8,7 +8,10 @@ interface TokensTableProps {
 }
 
 export default function TokensTable({ tokens }: TokensTableProps) {
-  if (!tokens || tokens.length === 0) {
+  // Filter tokens with value greater than $1
+  const filteredTokens = tokens?.filter(token => token.value_usd > 1) || [];
+
+  if (!filteredTokens || filteredTokens.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -16,7 +19,7 @@ export default function TokensTable({ tokens }: TokensTableProps) {
         </CardHeader>
         <CardContent>
           <div className="flex justify-center p-6 text-gray-500">
-            No token balances found
+            No token balances found with value greater than $1
           </div>
         </CardContent>
       </Card>
@@ -24,12 +27,12 @@ export default function TokensTable({ tokens }: TokensTableProps) {
   }
 
   // Sort tokens by value (highest first)
-  const sortedTokens = [...tokens].sort((a, b) => b.value_usd - a.value_usd);
+  const sortedTokens = [...filteredTokens].sort((a, b) => b.value_usd - a.value_usd);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Token Balances</CardTitle>
+        <CardTitle>Token Balances (Value {'>'} $1)</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>

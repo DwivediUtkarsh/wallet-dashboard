@@ -33,6 +33,12 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
           description={`${data.token_balances.length} Tokens`}
         />
 
+        <SummaryCard 
+          title="Uncollected Fees" 
+          value={formatDollar(data.summary.total_fees)}
+          description="Across all positions"
+        />
+
         {hasHyperliquid && (
           <SummaryCard 
             title="Hyperliquid Value" 
@@ -47,14 +53,6 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
             title="EVM Value" 
             value={formatDollar(data.evm_summary.total_value)}
             description={`${data.evm_summary.chain_count} Chains`}
-          />
-        )}
-
-        {!hasHyperliquid && !hasEvm && (
-          <SummaryCard 
-            title="Uncollected Fees" 
-            value={formatDollar(data.summary.total_fees)}
-            description="Across all positions"
           />
         )}
       </div>

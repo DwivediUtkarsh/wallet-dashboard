@@ -10,7 +10,7 @@ export function formatDollar(value: number, options: Intl.NumberFormatOptions = 
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 5,
     ...options
   }).format(value);
 }

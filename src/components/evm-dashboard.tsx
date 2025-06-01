@@ -1,13 +1,4 @@
-'use client';
-
-import { 
-  EvmPortfolioData, 
-  EvmChainData, 
-  EvmTokenBalance,
-  EvmLendingPosition, 
-  EvmLiquidityPosition,
-  EvmStakingPosition
-} from "@/types/api";
+import { EvmPortfolioData, EvmChainData, EvmLendingPosition, EvmLiquidityPosition, EvmStakingPosition, EvmTokenAmount } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDollar, formatNumber } from "@/lib/utils";
@@ -102,6 +93,9 @@ interface ChainDashboardProps {
 }
 
 function ChainDashboard({ chain }: ChainDashboardProps) {
+  // Filter tokens with value greater than $1
+  const filteredTokens = chain.token_balances.filter(token => token.value_usd > 1);
+  
   return (
     <div className="space-y-6">
       <Card>
@@ -117,6 +111,7 @@ function ChainDashboard({ chain }: ChainDashboardProps) {
             <div className="p-4 border rounded-lg">
               <h3 className="text-sm font-medium text-gray-500">Tokens</h3>
               <p className="text-2xl font-bold">{chain.token_balances.length}</p>
+              <p className="text-xs text-gray-500">{filteredTokens.length} with value {'>'} $1</p>
             </div>
             <div className="p-4 border rounded-lg">
               <h3 className="text-sm font-medium text-gray-500">Lending Positions</h3>
@@ -130,10 +125,10 @@ function ChainDashboard({ chain }: ChainDashboardProps) {
         </CardContent>
       </Card>
 
-      {chain.token_balances.length > 0 && (
+      {filteredTokens.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Token Balances</CardTitle>
+            <CardTitle>Token Balances (Value {'>'} $1)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -147,10 +142,10 @@ function ChainDashboard({ chain }: ChainDashboardProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {chain.token_balances.map((token, index) => (
+                  {filteredTokens.map((token, index) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{token.symbol}</TableCell>
-                      <TableCell>{formatNumber(token.amount)}</TableCell>
+                      <TableCell>{typeof token.balance === 'number' ? formatNumber(token.balance) : formatNumber(parseFloat(token.balance as string) || 0)}</TableCell>
                       <TableCell>{formatDollar(token.price_usd)}</TableCell>
                       <TableCell>{formatDollar(token.value_usd)}</TableCell>
                     </TableRow>
@@ -327,14 +322,16 @@ function LiquidityPositionCard({ position }: LiquidityPositionCardProps) {
               <TableRow>
                 <TableHead>Token</TableHead>
                 <TableHead>Amount</TableHead>
+                <TableHead>Price</TableHead>
                 <TableHead>Value</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {position.tokens.map((token: EvmTokenBalance, index: number) => (
-                <TableRow key={`token-${index}`}>
+              {position.tokens.map((token: EvmTokenAmount, index: number) => (
+                <TableRow key={index}>
                   <TableCell>{token.token}</TableCell>
                   <TableCell>{formatNumber(token.amount)}</TableCell>
+                  <TableCell>{formatDollar(token.price_usd)}</TableCell>
                   <TableCell>{formatDollar(token.value_usd)}</TableCell>
                 </TableRow>
               ))}
@@ -353,14 +350,16 @@ function LiquidityPositionCard({ position }: LiquidityPositionCardProps) {
               <TableRow>
                 <TableHead>Token</TableHead>
                 <TableHead>Amount</TableHead>
+                <TableHead>Price</TableHead>
                 <TableHead>Value</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {position.rewards.map((reward: EvmTokenBalance, index: number) => (
-                <TableRow key={`reward-${index}`}>
+              {position.rewards.map((reward: EvmTokenAmount, index: number) => (
+                <TableRow key={index}>
                   <TableCell>{reward.token}</TableCell>
                   <TableCell>{formatNumber(reward.amount)}</TableCell>
+                  <TableCell>{formatDollar(reward.price_usd)}</TableCell>
                   <TableCell>{formatDollar(reward.value_usd)}</TableCell>
                 </TableRow>
               ))}
@@ -439,4 +438,4 @@ function StakingPositionCard({ position }: StakingPositionCardProps) {
       )}
     </div>
   );
-}
+} 

@@ -165,6 +165,23 @@ export interface HyperliquidChartPoint {
   pnl_value: number;
 }
 
+export interface HyperliquidStakingDelegation {
+  validator: string;
+  amount: number;
+  locked_until: string | null;
+}
+
+export interface HyperliquidStaking {
+  delegated_amount: number;
+  undelegated_amount: number;
+  pending_withdrawal_amount: number;
+  pending_withdrawal_count: number;
+  usd_value: number;
+  token_symbol: string;
+  delegations: HyperliquidStakingDelegation[];
+  updated_at: string;
+}
+
 export interface HyperliquidSummary {
   total_equity: number;
   perps_equity: number;
@@ -186,6 +203,7 @@ export interface PortfolioSummary {
   kamino_value: number;
   hyperliquid_value: number;
   hyperliquid_pnl: number;
+  hyperliquid_staking_value: number;
   evm_value?: number;
   total_value: number;
 }
@@ -213,6 +231,7 @@ export interface PortfolioData {
   hyperliquid_account: HyperliquidAccount | null;
   hyperliquid_positions: HyperliquidPosition[];
   hyperliquid_chart: HyperliquidChartPoint[];
+  hyperliquid_staking: HyperliquidStaking | null;
   evm_data?: EvmPortfolioData;
   summary: PortfolioSummary;
 }
@@ -236,9 +255,10 @@ export interface EvmChainData {
 export interface EvmTokenBalance {
   token: string;
   symbol: string;
-  amount: number;
+  balance: number;
   price_usd: number;
   value_usd: number;
+  updated_at: string;
 }
 
 export interface EvmLendingPosition {
@@ -265,8 +285,8 @@ export interface EvmStakingPosition {
   name: string;
   total_value_usd: number;
   apr: number;
-  tokens: EvmTokenBalance[];
-  rewards: EvmTokenBalance[];
+  tokens: EvmTokenAmount[];
+  rewards: EvmTokenAmount[];
 }
 
 export interface EvmTokenAmount {
@@ -284,4 +304,4 @@ export interface EvmSummary {
   liquidity_value: number;
   staking_value: number;
   token_value: number;
-}
+} 

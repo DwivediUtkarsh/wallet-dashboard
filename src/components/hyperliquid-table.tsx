@@ -1,170 +1,223 @@
-'use client';
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { HyperliquidAccount, HyperliquidPosition } from "@/types/api";
-import { formatDollar, formatPercent } from "@/lib/utils";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "./ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDollar, formatNumber, formatPercent } from "@/lib/utils";
+import { HyperliquidAccount, HyperliquidPosition, HyperliquidStaking } from "@/types/api";
+import { Badge } from "@/components/ui/badge";
 
 interface HyperliquidTableProps {
   account: HyperliquidAccount | null;
   positions: HyperliquidPosition[];
+  staking?: HyperliquidStaking | null;
 }
 
-export default function HyperliquidTable({ account, positions }: HyperliquidTableProps) {
-  // If no account data or positions, show empty state
-  if (!account && positions.length === 0) {
+export default function HyperliquidTable({ account, positions, staking }: HyperliquidTableProps) {
+  if (!account && (!positions || positions.length === 0) && !staking) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Hyperliquid Account</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-500">No Hyperliquid data available for this wallet</p>
+          <div className="flex justify-center p-6 text-gray-500">
+            No Hyperliquid data found
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {account && (
         <Card>
           <CardHeader>
             <CardTitle>Hyperliquid Account Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-gray-500">Account Value</h3>
-                <div className="flex justify-between">
-                  <span className="text-sm">Total Equity</span>
-                  <span className="font-medium">{formatDollar(account.total_equity)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Perps Equity</span>
-                  <span className="font-medium">{formatDollar(account.perps_equity)}</span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-gray-500">PnL</h3>
-                <div className="flex justify-between">
-                  <span className="text-sm">Unrealized PnL</span>
-                  <span className={`font-medium ${account.unrealized_pnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatDollar(account.unrealized_pnl)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">24h PnL</span>
-                  <span className={`font-medium ${account.pnl_24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatDollar(account.pnl_24h)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Total PnL</span>
-                  <span className={`font-medium ${account.total_pnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatDollar(account.total_pnl)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-gray-500">Metrics</h3>
-                <div className="flex justify-between">
-                  <span className="text-sm">Funding Paid (24h)</span>
-                  <span className="font-medium">{formatDollar(account.funding_paid_24h)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Volume (24h)</span>
-                  <span className="font-medium">{formatDollar(account.volume_24h)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">ROI (30d)</span>
-                  <span className={`font-medium ${account.roi_30d >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatPercent(account.roi_30d)}
-                  </span>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+              <SummaryItem
+                label="Total Equity"
+                value={formatDollar(account.total_equity)}
+              />
+              <SummaryItem
+                label="Perps Equity"
+                value={formatDollar(account.perps_equity)}
+              />
+              <SummaryItem
+                label="24h PnL"
+                value={formatDollar(account.pnl_24h)}
+                valueClass={account.pnl_24h >= 0 ? "text-green-600" : "text-red-600"}
+              />
+              <SummaryItem
+                label="Unrealized PnL"
+                value={formatDollar(account.unrealized_pnl)}
+                valueClass={account.unrealized_pnl >= 0 ? "text-green-600" : "text-red-600"}
+              />
+              <SummaryItem
+                label="Funding (24h)"
+                value={formatDollar(account.funding_paid_24h)}
+                valueClass={account.funding_paid_24h <= 0 ? "text-green-600" : "text-red-600"}
+              />
             </div>
           </CardContent>
         </Card>
       )}
 
-      {positions.length > 0 && (
+      {staking && (
         <Card>
           <CardHeader>
-            <CardTitle>Hyperliquid Positions</CardTitle>
+            <CardTitle>HYPE Staking</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Coin</TableHead>
-                    <TableHead>Side</TableHead>
-                    <TableHead>Size</TableHead>
-                    <TableHead>Value</TableHead>
-                    <TableHead>Entry Price</TableHead>
-                    <TableHead>Mark Price</TableHead>
-                    <TableHead>Liq. Price</TableHead>
-                    <TableHead>Leverage</TableHead>
-                    <TableHead>PnL</TableHead>
-                    <TableHead>PnL %</TableHead>
-                    <TableHead>Funding</TableHead>
-                    <TableHead>Risk</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {positions.map((position) => (
-                    <TableRow key={position.coin}>
-                      <TableCell className="font-medium">{position.coin}</TableCell>
-                      <TableCell>
-                        <Badge variant={position.is_long ? "secondary" : "destructive"}>
-                          {position.is_long ? "LONG" : "SHORT"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{position.size.toFixed(4)}</TableCell>
-                      <TableCell>{formatDollar(position.position_value)}</TableCell>
-                      <TableCell>{formatDollar(position.entry_price)}</TableCell>
-                      <TableCell>{formatDollar(position.mark_price)}</TableCell>
-                      <TableCell>{formatDollar(position.liq_price)}</TableCell>
-                      <TableCell>{position.leverage.toFixed(2)}x</TableCell>
-                      <TableCell className={position.pnl >= 0 ? "text-green-600" : "text-red-600"}>
-                        {formatDollar(position.pnl)}
-                      </TableCell>
-                      <TableCell className={position.pnl_percent >= 0 ? "text-green-600" : "text-red-600"}>
-                        {formatPercent(position.pnl_percent)}
-                      </TableCell>
-                      <TableCell>{formatDollar(position.funding_usd)}</TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={
-                            position.risk_level === "high" 
-                              ? "destructive" 
-                              : position.risk_level === "medium" 
-                                ? "outline" 
-                                : "outline"
-                          }
-                        >
-                          {position.risk_level.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <SummaryItem
+                label="Delegated HYPE"
+                value={`${formatNumber(staking.delegated_amount)} HYPE`}
+              />
+              <SummaryItem
+                label="Undelegated HYPE"
+                value={`${formatNumber(staking.undelegated_amount)} HYPE`}
+              />
+              <SummaryItem
+                label="Total Value"
+                value={formatDollar(staking.usd_value)}
+              />
             </div>
+            
+            {staking.delegations && staking.delegations.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-base font-semibold mb-2">Delegations</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Validator</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {staking.delegations.map((delegation, index: number) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{delegation.validator.slice(0, 10)}...</TableCell>
+                        <TableCell className="text-right font-mono">
+                          {formatNumber(delegation.amount)} HYPE
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {delegation.locked_until ? (
+                            <span className="text-yellow-600">
+                              Locked until {new Date(delegation.locked_until).toLocaleDateString()}
+                            </span>
+                          ) : (
+                            <span className="text-green-600">Liquid</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {positions && positions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Positions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Asset</TableHead>
+                  <TableHead>Side</TableHead>
+                  <TableHead className="text-right">Size</TableHead>
+                  <TableHead className="text-right">Entry</TableHead>
+                  <TableHead className="text-right">Mark</TableHead>
+                  <TableHead className="text-right">Margin</TableHead>
+                  <TableHead className="text-right">Lev</TableHead>
+                  <TableHead className="text-right">PnL</TableHead>
+                  <TableHead className="text-right">ROE%</TableHead>
+                  <TableHead className="text-right">Funding</TableHead>
+                  <TableHead className="text-right">Liq Price</TableHead>
+                  <TableHead>Risk</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {positions.map((position, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{position.coin}</TableCell>
+                    <TableCell>
+                      <Badge variant={position.is_long ? "default" : "destructive"}>
+                        {position.is_long ? "LONG" : "SHORT"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatNumber(Math.abs(position.size))}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatNumber(position.entry_price)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatNumber(position.mark_price)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatDollar(position.margin)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {position.leverage}x
+                    </TableCell>
+                    <TableCell className={`text-right ${position.pnl >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {formatDollar(position.pnl)}
+                    </TableCell>
+                    <TableCell className={`text-right ${position.pnl_percent >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {formatPercent(position.pnl_percent / 100)}
+                    </TableCell>
+                    <TableCell className={`text-right ${position.funding_usd <= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {formatDollar(position.funding_usd)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatNumber(position.liq_price)}
+                    </TableCell>
+                    <TableCell>
+                      <RiskBadge risk={position.risk_level} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
     </div>
   );
 }
+
+interface SummaryItemProps {
+  label: string;
+  value: string;
+  valueClass?: string;
+}
+
+function SummaryItem({ label, value, valueClass = "" }: SummaryItemProps) {
+  return (
+    <div className="bg-gray-50 p-3 rounded-md">
+      <div className="text-gray-500 text-sm">{label}</div>
+      <div className={`font-semibold ${valueClass}`}>{value}</div>
+    </div>
+  );
+}
+
+function RiskBadge({ risk }: { risk: string }) {
+  switch (risk) {
+    case 'low':
+      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">LOW</Badge>;
+    case 'medium':
+      return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">MEDIUM</Badge>;
+    case 'high':
+      return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">HIGH</Badge>;
+    default:
+      return <Badge variant="outline">{risk.toUpperCase()}</Badge>;
+  }
+} 
