@@ -40,6 +40,7 @@ export default function WalletList({ wallets }: WalletListProps) {
   const solanaWallets = wallets.filter(w => w.chain === 'solana');
   const evmWallets = wallets.filter(w => w.chain === 'evm');
   const hyperliquidWallets = wallets.filter(w => w.chain === 'hyperliquid');
+  const suiWallets = wallets.filter(w => w.chain === 'sui');
 
   return (
     <Card>
@@ -55,7 +56,7 @@ export default function WalletList({ wallets }: WalletListProps) {
           </div>
         </div>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-4">
+          <TabsList className="grid grid-cols-5">
             <TabsTrigger value="all">
               All ({wallets.length})
             </TabsTrigger>
@@ -67,6 +68,9 @@ export default function WalletList({ wallets }: WalletListProps) {
             </TabsTrigger>
             <TabsTrigger value="hyperliquid">
               Hyperliquid ({hyperliquidWallets.length})
+            </TabsTrigger>
+            <TabsTrigger value="sui">
+              Sui ({suiWallets.length})
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -94,11 +98,15 @@ export default function WalletList({ wallets }: WalletListProps) {
                   <Badge variant={
                     wallet.chain === 'solana' ? "default" : 
                     wallet.chain === 'evm' ? "secondary" : 
+                    wallet.chain === 'hyperliquid' ? "outline" :
+                    wallet.chain === 'sui' ? "destructive" :
                     "outline"
                   }>
                     {wallet.chain === 'solana' ? 'Solana' : 
                      wallet.chain === 'evm' ? 'EVM' : 
-                     'Hyperliquid'}
+                     wallet.chain === 'hyperliquid' ? 'Hyperliquid' :
+                     wallet.chain === 'sui' ? 'Sui' :
+                     'Unknown'}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">

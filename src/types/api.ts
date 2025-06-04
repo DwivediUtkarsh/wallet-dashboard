@@ -6,7 +6,7 @@ export interface WalletInfo {
   label: string;
   created_at: string;
   updated_at: string;
-  chain?: 'solana' | 'hyperliquid' | 'evm';
+  chain?: 'solana' | 'hyperliquid' | 'evm' | 'sui';
   total_value_usd?: number;
 }
 
@@ -19,6 +19,23 @@ export interface TokenBalance {
   updated_at: string;
 }
 
+// For the top tokens feature
+export interface TokenWalletData {
+  address: string;
+  label?: string;
+  value_usd: number;
+  amount: number;
+}
+
+export interface TopTokenData {
+  symbol: string;
+  name: string;
+  total_amount: number;
+  price_usd: number;
+  total_value_usd: number;
+  wallets: TokenWalletData[];
+}
+
 export interface LPPosition {
   pool: string;
   token_a_symbol: string;
@@ -29,6 +46,8 @@ export interface LPPosition {
   in_range: boolean;
   uncollected_fees_usd: number;
   updated_at: string;
+  protocol?: 'whirlpool' | 'raydium';
+  position_address?: string;
 }
 
 // For aggregated data in the summary endpoints
@@ -205,6 +224,10 @@ export interface PortfolioSummary {
   hyperliquid_pnl: number;
   hyperliquid_staking_value: number;
   evm_value?: number;
+  sui_token_value?: number;
+  sui_bluefin_value?: number;
+  sui_bluefin_fees?: number;
+  sui_suilend_value?: number;
   total_value: number;
 }
 
@@ -217,12 +240,13 @@ export interface PortfolioSummaryData {
   kamino_lend_summary: KaminoLendSummary;
   hyperliquid_summary: HyperliquidSummary;
   evm_summary?: EvmSummary;
+  sui_summary?: SuiSummary;
   summary: PortfolioSummary;
 }
 
 export interface PortfolioData {
   wallet_address?: string;
-  chain?: 'solana' | 'hyperliquid' | 'evm';
+  chain?: 'solana' | 'hyperliquid' | 'evm' | 'sui';
   token_balances: TokenBalance[];
   whirlpool_positions: LPPosition[];
   raydium_positions: LPPosition[];
@@ -233,6 +257,7 @@ export interface PortfolioData {
   hyperliquid_chart: HyperliquidChartPoint[];
   hyperliquid_staking: HyperliquidStaking | null;
   evm_data?: EvmPortfolioData;
+  sui_data?: SuiPortfolioData;
   summary: PortfolioSummary;
 }
 
@@ -304,4 +329,66 @@ export interface EvmSummary {
   liquidity_value: number;
   staking_value: number;
   token_value: number;
+}
+
+// Sui-specific types
+export interface SuiTokenBalance {
+  symbol: string;
+  coin_type: string;
+  name: string;
+  amount: number;
+  price_usd: number;
+  value_usd: number;
+  updated_at: string;
+}
+
+export interface SuiBluefinPosition {
+  pool: string;
+  token_a: string;
+  token_b: string;
+  amount_a: number;
+  amount_b: number;
+  usd_value: number;
+  position_id: string;
+  tick_lower: number;
+  tick_upper: number;
+  in_range: boolean;
+  uncollected_fees_usd: number;
+  updated_at: string;
+}
+
+export interface SuiLendPosition {
+  symbol: string;
+  type: 'deposit' | 'borrow';
+  amount: number;
+  usd_value: number;
+  coin_type: string;
+  market_address: string;
+  apr: number;
+  net_usd: number;
+  updated_at: string;
+}
+
+export interface SuiPortfolioData {
+  wallet_address: string;
+  chain: 'sui';
+  token_balances: SuiTokenBalance[];
+  bluefin_positions: SuiBluefinPosition[];
+  suilend_positions: SuiLendPosition[];
+  summary: {
+    total_token_value: number;
+    total_bluefin_value: number;
+    total_bluefin_fees: number;
+    total_suilend_value: number;
+    total_portfolio_value: number;
+  };
+}
+
+export interface SuiSummary {
+  total_token_value: number;
+  total_bluefin_value: number;
+  total_bluefin_fees: number;
+  total_suilend_value: number;
+  total_value: number;
+  wallet_count: number;
 } 

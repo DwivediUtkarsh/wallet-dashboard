@@ -1,6 +1,6 @@
 // API client for connecting to the portfolio tracking backend
 
-import { PortfolioData, WalletInfo, PortfolioSummaryData } from '@/types/api';
+import { PortfolioData, WalletInfo, PortfolioSummaryData, TopTokenData } from '@/types/api';
 
 // Default to local development API if not set
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -122,10 +122,51 @@ export async function getEvmData(walletAddress: string) {
 }
 
 /**
+ * Get Sui portfolio data for a wallet
+ */
+export async function getSuiData(walletAddress: string) {
+  return fetchWithErrorHandling(`/sui/${walletAddress}`);
+}
+
+/**
+ * Get Sui token balances for a wallet
+ */
+export async function getSuiTokenBalances(walletAddress: string) {
+  return fetchWithErrorHandling(`/sui/tokens/${walletAddress}`);
+}
+
+/**
+ * Get Bluefin positions for a wallet
+ */
+export async function getBluefinPositions(walletAddress: string) {
+  return fetchWithErrorHandling(`/sui/bluefin/${walletAddress}`);
+}
+
+/**
+ * Get SuiLend positions for a wallet
+ */
+export async function getSuiLendPositions(walletAddress: string) {
+  return fetchWithErrorHandling(`/sui/suilend/${walletAddress}`);
+}
+
+/**
+ * Get Sui historical data for a wallet
+ */
+export async function getSuiHistory(walletAddress: string, timeframe = '7d') {
+  return fetchWithErrorHandling(`/sui/history/${walletAddress}?timeframe=${timeframe}`);
+}
+
+/**
  * Validate address format based on chain
  */
 export function isValidAddress(address: string, chain?: string): boolean {
   if (!address) return false;
+  
+  // Sui addresses (64 character hex starting with 0x)
+  if (chain === 'sui') {
+    const suiRegex = /^0x[a-fA-F0-9]{64}$/;
+    return suiRegex.test(address);
+  }
   
   // EVM addresses
   if (chain === 'evm' || address.startsWith('0x')) {
@@ -152,4 +193,11 @@ export function isValidSolanaAddress(address: string): boolean {
   // Base58 check (alphanumeric except 0, O, I, l)
   const base58Regex = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
   return address.length >= 32 && address.length <= 44 && base58Regex.test(address);
+}
+
+/**
+ * Get the top tokens across all wallets
+ */
+export async function getTopTokens(limit = 20): Promise<TopTokenData[]> {
+  return fetchWithErrorHandling<TopTokenData[]>(`/portfolio/top-tokens?limit=${limit}`);
 } 

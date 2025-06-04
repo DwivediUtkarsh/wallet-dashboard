@@ -1,12 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDollar, formatPercent } from "@/lib/utils";
+import { formatDollar } from "@/lib/utils";
 import { PortfolioSummary } from "@/types/api";
 
 interface PortfolioSummaryProps {
   summary: PortfolioSummary;
   walletCount?: number;
   isAggregate?: boolean;
-  chain?: 'solana' | 'hyperliquid' | 'evm';
+  chain?: 'solana' | 'hyperliquid' | 'evm' | 'sui';
 }
 
 export default function PortfolioSummaryComponent({ 
@@ -15,19 +15,21 @@ export default function PortfolioSummaryComponent({
   isAggregate = false,
   chain 
 }: PortfolioSummaryProps) {
-  // Check if we have any Hyperliquid value
-  const hasHyperliquid = summary.hyperliquid_value > 0 || (summary.hyperliquid_staking_value && summary.hyperliquid_staking_value > 0);
-  // Check if we have any EVM value
-  const hasEvm = summary.evm_value && summary.evm_value > 0;
-  // Safety check for missing fields
+  // Check if we have any values for different chains
+  const hasHyperliquid = summary.hyperliquid_value > 0 || summary.hyperliquid_staking_value > 0;
+  const hasEvm = typeof summary.evm_value === 'number' && summary.evm_value > 0;
+  const hasSui = (summary.sui_token_value && summary.sui_token_value > 0) ||
+                 (summary.sui_bluefin_value && summary.sui_bluefin_value > 0) ||
+                 (summary.sui_suilend_value && summary.sui_suilend_value > 0);
+
+  // Calculate values based on chain
+  const lpPositionValue = summary.whirlpool_value + summary.raydium_value;
   const hyperliquidPnl = summary.hyperliquid_pnl || 0;
-  // Calculate LP position value (Whirlpool + Raydium)
-  const lpPositionValue = (summary.whirlpool_value || 0) + (summary.raydium_value || 0);
-  // Calculate total Hyperliquid value (account + staking)
-  const totalHyperliquidValue = (summary.hyperliquid_value || 0) + (summary.hyperliquid_staking_value || 0);
-  
-  // Calculate lending value
-  const lendingValue = summary.marginfi_value + summary.kamino_value;
+  const totalHyperliquidValue = summary.hyperliquid_value + summary.hyperliquid_staking_value;
+  const totalSuiValue = (summary.sui_token_value || 0) + 
+                        (summary.sui_bluefin_value || 0) + 
+                        (summary.sui_suilend_value || 0);
+
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -41,7 +43,7 @@ export default function PortfolioSummaryComponent({
       {/* Token Value - always shown */}
       <SummaryCard 
         title="Token Value" 
-        value={formatDollar(summary.token_value)} 
+        value={formatDollar(summary.token_value)}
         description="Combined Token Balances"
       />
 
@@ -56,7 +58,7 @@ export default function PortfolioSummaryComponent({
 
       {/* Hyperliquid Value - only for Hyperliquid wallets or aggregate view */}
       {((!chain && hasHyperliquid) || chain === 'hyperliquid' || (isAggregate && hasHyperliquid)) && (
-        <SummaryCard 
+      <SummaryCard 
           title="Hyperliquid Value" 
           value={formatDollar(totalHyperliquidValue)} 
           description={
@@ -70,28 +72,45 @@ export default function PortfolioSummaryComponent({
 
       {/* EVM Value - only for EVM wallets or aggregate view */}
       {((!chain && hasEvm) || chain === 'evm' || (isAggregate && hasEvm)) && typeof summary.evm_value === 'number' && summary.evm_value > 0 && (
-        <SummaryCard 
+      <SummaryCard 
           title="EVM Value" 
           value={formatDollar(summary.evm_value)} 
           description="EVM Chain Assets"
-        />
+      />
       )}
 
-      {/* Uncollected Fees - only for Solana wallets or aggregate view */}
-      {(!chain || chain === 'solana' || isAggregate) && summary.total_fees > 0 && (
+      {/* Sui Value - only for Sui wallets or aggregate view */}
+      {((!chain && hasSui) || chain === 'sui' || (isAggregate && hasSui)) && (
         <SummaryCard 
-          title="Uncollected Fees" 
-          value={formatDollar(summary.total_fees)} 
-          description="From LP Positions"
+          title="Sui Value" 
+          value={formatDollar(totalSuiValue)} 
+          description={
+            chain === 'sui' && summary.sui_bluefin_fees && summary.sui_bluefin_fees > 0
+              ? `Fees: ${formatDollar(summary.sui_bluefin_fees)}`
+              : "Sui Chain Assets"
+          }
         />
       )}
 
-      {/* Lending Value - only show if there's a value */}
-      {lendingValue > 0 && (
+      {/* Lending Value - only for Solana wallets or aggregate view */}
+      {(!chain || chain === 'solana' || isAggregate) && (summary.marginfi_value > 0 || summary.kamino_value > 0) && (
         <SummaryCard 
           title="Lending Value" 
-          value={formatDollar(lendingValue)} 
+          value={formatDollar(summary.marginfi_value + summary.kamino_value)} 
           description="Marginfi & Kamino"
+        />
+      )}
+
+      {/* Fees - only for chains that have fees and aggregate view */}
+      {(!chain || chain === 'solana' || chain === 'sui' || isAggregate) && (summary.total_fees > 0 || (summary.sui_bluefin_fees && summary.sui_bluefin_fees > 0)) && (
+        <SummaryCard 
+          title="Uncollected Fees" 
+          value={formatDollar(summary.total_fees + (summary.sui_bluefin_fees || 0))} 
+          description={
+            chain === 'sui' ? "Bluefin Fees" : 
+            chain === 'solana' ? "Whirlpool & Raydium" :
+            "All Protocols"
+          }
         />
       )}
     </div>
@@ -101,29 +120,29 @@ export default function PortfolioSummaryComponent({
 interface SummaryCardProps {
   title: string;
   value: string;
-  description: string;
-  trend?: number;
+  description?: string;
+  trend?: number; // 1 for positive, -1 for negative, 0 for neutral
 }
 
 function SummaryCard({ title, value, description, trend }: SummaryCardProps) {
-  const trendColor = trend ? (trend > 0 ? 'text-green-500' : 'text-red-500') : '';
-  const trendPrefix = trend && trend > 0 ? '+' : '';
-  
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-gray-500">{title}</CardTitle>
+        <CardTitle className="text-sm font-medium text-gray-600">
+          {title}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <div className="flex items-center mt-1">
-          <p className="text-sm text-gray-500">{description}</p>
-          {trend !== undefined && (
-            <p className={`ml-2 text-sm ${trendColor}`}>
-              {trendPrefix}{formatPercent(trend)}
-            </p>
-          )}
-        </div>
+        <div className="text-2xl font-bold mb-1">{value}</div>
+        {description && (
+          <p className={`text-xs ${
+            trend === 1 ? 'text-green-600' : 
+            trend === -1 ? 'text-red-600' : 
+            'text-gray-500'
+          }`}>
+            {description}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

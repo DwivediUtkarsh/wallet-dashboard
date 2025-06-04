@@ -14,9 +14,12 @@ import MarginfiTable from '@/components/marginfi-table';
 import KaminoTable from '@/components/kamino-table';
 import HyperliquidTable from '@/components/hyperliquid-table';
 import EvmDashboard from '@/components/evm-dashboard';
+import SuiDashboard from '@/components/sui-dashboard';
 import PortfolioSummaryComponent from '@/components/portfolio-summary';
 import FeeGrowthChart from '@/components/fee-growth-chart';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
+import { ChartPieIcon } from '@heroicons/react/24/outline';
 
 export default function DashboardPage() {
   const { wallet } = useParams() as { wallet: string };
@@ -34,16 +37,35 @@ export default function DashboardPage() {
   };
 
   // Determine wallet type based on data from API and address format as fallback
-  const walletChain = data?.chain || (wallet.startsWith('0x') && wallet.includes('hyper') ? 'hyperliquid' : 
-                      wallet.startsWith('0x') ? 'evm' : 'solana');
+  const walletChain = data?.chain || (
+    wallet.startsWith('0x') && wallet.length === 66 ? 'sui' :
+    wallet.startsWith('0x') && wallet.includes('hyper') ? 'hyperliquid' : 
+    wallet.startsWith('0x') && wallet.length === 42 ? 'evm' : 
+    'solana'
+  );
   
-  // Check if we have EVM data
+  // Check if we have specific chain data
   const hasEvmData = data?.evm_data && data.evm_data.chains && data.evm_data.chains.length > 0;
+  const hasSuiData = data?.sui_data && (
+    data.sui_data.token_balances.length > 0 || 
+    data.sui_data.bluefin_positions.length > 0 || 
+    data.sui_data.suilend_positions.length > 0
+  );
 
   return (
     <main className="container mx-auto py-6 px-4 md:px-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Portfolio Dashboard</h1>
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-3xl font-bold">Portfolio Dashboard</h1>
+          {walletChain === 'solana' && (
+            <Link href={`/dashboard/${wallet}/fee-analytics`}>
+              <Button variant="outline" className="flex items-center gap-1">
+                <ChartPieIcon className="h-4 w-4" />
+                <span>Fee Analytics</span>
+              </Button>
+            </Link>
+          )}
+        </div>
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <span className="font-mono">{wallet}</span>
           <Button 
@@ -63,6 +85,9 @@ export default function DashboardPage() {
           {walletChain === 'solana' && (
             <Badge variant="secondary">Solana</Badge>
           )}
+          {walletChain === 'sui' && (
+            <Badge variant="destructive">Sui</Badge>
+          )}
         </div>
       </div>
 
@@ -77,11 +102,14 @@ export default function DashboardPage() {
         </div>
       ) : data ? (
         <div className="space-y-6">
-          <PortfolioSummaryComponent summary={data.summary} chain={walletChain as 'solana' | 'hyperliquid' | 'evm'} />
+          <PortfolioSummaryComponent summary={data.summary} chain={walletChain as 'solana' | 'hyperliquid' | 'evm' | 'sui'} />
           
           {walletChain === 'evm' && hasEvmData ? (
             // Render EVM Dashboard for EVM wallets
             <EvmDashboard data={data.evm_data!} />
+          ) : walletChain === 'sui' && hasSuiData ? (
+            // Render Sui Dashboard for Sui wallets
+            <SuiDashboard data={data.sui_data!} />
           ) : walletChain === 'hyperliquid' ? (
             // Render Hyperliquid Dashboard for Hyperliquid wallets
             <Tabs defaultValue="hyperliquid" className="w-full">
@@ -149,8 +177,11 @@ export default function DashboardPage() {
           )}
         </div>
       ) : (
-        <div className="flex justify-center p-12">
-          <p>No data available</p>
+        <div className="flex flex-col items-center justify-center p-8 rounded-lg border border-gray-200 bg-gray-50 text-gray-700">
+          <h3 className="text-lg font-medium mb-2">No Portfolio Data</h3>
+          <p className="text-center text-sm">
+            No portfolio data found for this wallet address.
+          </p>
         </div>
       )}
     </main>

@@ -32,6 +32,15 @@ export function formatPercent(value: number, options: Intl.NumberFormatOptions =
   }).format(value / 100);
 }
 
+export function formatPercentage(value: number, options: Intl.NumberFormatOptions = {}): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'percent',
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2,
+    ...options
+  }).format(value / 100);
+}
+
 export function shortenAddress(address: string, chars = 4): string {
   if (!address) return '';
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;

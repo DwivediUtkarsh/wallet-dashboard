@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDollar, formatNumber, formatPercent } from "@/lib/utils";
-import { HyperliquidAccount, HyperliquidPosition, HyperliquidStaking } from "@/types/api";
+import { HyperliquidAccount, HyperliquidPosition, HyperliquidStaking, HyperliquidStakingDelegation } from "@/types/api";
 import { Badge } from "@/components/ui/badge";
 
 interface HyperliquidTableProps {
@@ -96,7 +96,7 @@ export default function HyperliquidTable({ account, positions, staking }: Hyperl
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {staking.delegations.map((delegation, index: number) => (
+                    {staking.delegations.map((delegation: HyperliquidStakingDelegation, index: number) => (
                       <TableRow key={index}>
                         <TableCell className="font-medium">{delegation.validator.slice(0, 10)}...</TableCell>
                         <TableCell className="text-right font-mono">
