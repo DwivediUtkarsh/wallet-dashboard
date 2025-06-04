@@ -25,7 +25,6 @@ export default function PortfolioSummaryComponent({
   // Calculate values based on chain
   const lpPositionValue = summary.whirlpool_value + summary.raydium_value;
   const hyperliquidPnl = summary.hyperliquid_pnl || 0;
-  const totalHyperliquidValue = summary.hyperliquid_value + summary.hyperliquid_staking_value;
   const totalSuiValue = (summary.sui_token_value || 0) + 
                         (summary.sui_bluefin_value || 0) + 
                         (summary.sui_suilend_value || 0);
@@ -60,10 +59,10 @@ export default function PortfolioSummaryComponent({
       {((!chain && hasHyperliquid) || chain === 'hyperliquid' || (isAggregate && hasHyperliquid)) && (
       <SummaryCard 
           title="Hyperliquid Value" 
-          value={formatDollar(totalHyperliquidValue)} 
+          value={formatDollar(summary.hyperliquid_value)} 
           description={
             summary.hyperliquid_staking_value > 0 
-              ? `Trading: ${formatDollar(summary.hyperliquid_value)} | Staked: ${formatDollar(summary.hyperliquid_staking_value)}`
+              ? `Trading: ${formatDollar(summary.hyperliquid_value - summary.hyperliquid_staking_value)} | Staked: ${formatDollar(summary.hyperliquid_staking_value)}`
               : hyperliquidPnl >= 0 ? `PnL: +${formatDollar(hyperliquidPnl)}` : `PnL: ${formatDollar(hyperliquidPnl)}`
           }
           trend={hyperliquidPnl > 0 ? 1 : hyperliquidPnl < 0 ? -1 : 0}
@@ -81,7 +80,7 @@ export default function PortfolioSummaryComponent({
 
       {/* Sui Value - only for Sui wallets or aggregate view */}
       {((!chain && hasSui) || chain === 'sui' || (isAggregate && hasSui)) && (
-        <SummaryCard 
+      <SummaryCard 
           title="Sui Value" 
           value={formatDollar(totalSuiValue)} 
           description={
@@ -89,7 +88,7 @@ export default function PortfolioSummaryComponent({
               ? `Fees: ${formatDollar(summary.sui_bluefin_fees)}`
               : "Sui Chain Assets"
           }
-        />
+      />
       )}
 
       {/* Lending Value - only for Solana wallets or aggregate view */}
@@ -141,8 +140,8 @@ function SummaryCard({ title, value, description, trend }: SummaryCardProps) {
             'text-gray-500'
           }`}>
             {description}
-          </p>
-        )}
+            </p>
+          )}
       </CardContent>
     </Card>
   );

@@ -8,7 +8,7 @@ interface PortfolioSummaryAggregateProps {
 
 export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggregateProps) {
   // Check if we have any value for different chains
-  const hasHyperliquid = data.hyperliquid_summary && data.hyperliquid_summary.total_equity > 0;
+  const hasHyperliquid = data.hyperliquid_summary && (data.summary.hyperliquid_value > 0);
   const hasEvm = data.evm_summary && data.evm_summary.total_value > 0;
   const hasSui = data.sui_summary && data.sui_summary.total_value > 0;
   
@@ -46,9 +46,9 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
         {hasHyperliquid && (
           <SummaryCard 
             title="Hyperliquid Value" 
-            value={formatDollar(data.hyperliquid_summary.total_equity)}
-            description={`${data.hyperliquid_summary.account_count} Accounts`}
-            trend={data.hyperliquid_summary.total_pnl / data.hyperliquid_summary.total_equity * 100}
+            value={formatDollar(data.summary.hyperliquid_value)}
+            description={`${data.hyperliquid_summary.account_count} Accounts${data.summary.hyperliquid_staking_value > 0 ? ` • $${formatDollar(data.summary.hyperliquid_staking_value)} Staked` : ''}`}
+            trend={data.hyperliquid_summary.total_pnl && data.summary.hyperliquid_value > 0 ? data.hyperliquid_summary.total_pnl / data.summary.hyperliquid_value * 100 : 0}
           />
         )}
 
