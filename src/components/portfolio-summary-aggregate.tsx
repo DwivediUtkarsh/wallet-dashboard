@@ -47,7 +47,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
           <SummaryCard 
             title="Hyperliquid Value" 
             value={formatDollar(data.summary.hyperliquid_value)}
-            description={`${data.hyperliquid_summary.account_count} Accounts${data.summary.hyperliquid_staking_value > 0 ? ` • $${formatDollar(data.summary.hyperliquid_staking_value)} Staked` : ''}`}
+            description={`${data.hyperliquid_summary.account_count} Accounts${data.summary.hyperliquid_staking_value > 0 ? ` • $${data.summary.hyperliquid_staking_value.toLocaleString()} Staked` : ''}`}
             trend={data.hyperliquid_summary.total_pnl && data.summary.hyperliquid_value > 0 ? data.hyperliquid_summary.total_pnl / data.summary.hyperliquid_value * 100 : 0}
           />
         )}

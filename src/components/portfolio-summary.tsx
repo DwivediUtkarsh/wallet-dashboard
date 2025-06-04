@@ -62,8 +62,8 @@ export default function PortfolioSummaryComponent({
           value={formatDollar(summary.hyperliquid_value)} 
           description={
             summary.hyperliquid_staking_value > 0 
-              ? `Trading: ${formatDollar(summary.hyperliquid_value - summary.hyperliquid_staking_value)} | Staked: ${formatDollar(summary.hyperliquid_staking_value)}`
-              : hyperliquidPnl >= 0 ? `PnL: +${formatDollar(hyperliquidPnl)}` : `PnL: ${formatDollar(hyperliquidPnl)}`
+              ? `Trading: $${(summary.hyperliquid_value - summary.hyperliquid_staking_value).toLocaleString()} | Staked: $${summary.hyperliquid_staking_value.toLocaleString()}`
+              : hyperliquidPnl >= 0 ? `PnL: +$${hyperliquidPnl.toLocaleString()}` : `PnL: -$${Math.abs(hyperliquidPnl).toLocaleString()}`
           }
           trend={hyperliquidPnl > 0 ? 1 : hyperliquidPnl < 0 ? -1 : 0}
         />
