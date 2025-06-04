@@ -2,11 +2,15 @@
 
 import { PortfolioData, WalletInfo, PortfolioSummaryData, TopTokenData } from '@/types/api';
 
-// Default to local development API if not set
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Use proxy route for production, direct API for development
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const API_BASE_URL = IS_PRODUCTION 
+  ? '/api/proxy'  // Use proxy in production
+  : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Log the API base URL for debugging
 console.log('API_BASE_URL:', API_BASE_URL);
+console.log('IS_PRODUCTION:', IS_PRODUCTION);
 
 /**
  * Base fetch function with error handling
