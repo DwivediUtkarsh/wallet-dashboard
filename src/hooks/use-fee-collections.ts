@@ -2,16 +2,20 @@ import { useState, useEffect } from 'react';
 
 interface FeeCollection {
   id: number;
+  transaction_signature: string;
   protocol: string;
   position_address?: string;
-  pool_name: string;
-  token_a_symbol: string;
-  token_b_symbol: string;
+  pool_name?: string;
+  token_a_symbol?: string;
+  token_b_symbol?: string;
+  token_mint?: string;
+  token_amount: number;
+  native_transfer_net_sol?: number;
   usd_amount: number;
   collection_time: string;
-  collection_type: string;
-  converted_to_jitosol: boolean;
-  conversion_time: string | null;
+  collection_type?: string;
+  converted_to_jitosol?: boolean;
+  conversion_time?: string | null;
 }
 
 interface JitoSolConversion {
@@ -69,7 +73,7 @@ export function useFeeCollections(
       setError(null);
 
       try {
-        const response = await fetch(`/api/fee-collections/${walletAddress}?timeframe=${timeframe}`);
+        const response = await fetch(`/api/fee-collections/${walletAddress}?timeframe=${timeframe}&_t=${Date.now()}`);
         if (!response.ok) {
           throw new Error(`Failed to fetch fee collections: ${response.statusText}`);
         }

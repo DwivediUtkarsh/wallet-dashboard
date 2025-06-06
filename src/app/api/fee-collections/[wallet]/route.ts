@@ -50,8 +50,15 @@ export async function GET(
     
     const data = await response.json();
     
-    // Return the data from the API
-    return NextResponse.json(data);
+    // Return the data from the API with cache-busting headers
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store'
+      }
+    });
   } catch (error) {
     console.error('Error in fee-collections API route:', error);
     return NextResponse.json(

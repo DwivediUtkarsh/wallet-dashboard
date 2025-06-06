@@ -54,6 +54,13 @@ export default function FeeAnalytics({ walletAddress }: FeeAnalyticsProps) {
     };
   };
 
+  // Check if all timestamps are the same (indicates data issue)
+  const hasTimestampIssue = () => {
+    if (!feeData?.fee_collections?.length) return false;
+    const timestamps = feeData.fee_collections.map(c => c.collection_time);
+    return timestamps.every(t => t === timestamps[0]);
+  };
+
   const uncollectedFees = getUncollectedFees();
 
   return (
@@ -232,7 +239,7 @@ export default function FeeAnalytics({ walletAddress }: FeeAnalyticsProps) {
             <CardHeader>
               <CardTitle>Fee Collection Events</CardTitle>
               <CardDescription>
-                History of fee collection events in the selected timeframe
+                History of fee collection events detected via Helius API
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -249,42 +256,78 @@ export default function FeeAnalytics({ walletAddress }: FeeAnalyticsProps) {
                   No fee collection events in the selected timeframe
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Pool</TableHead>
-                      <TableHead>Protocol</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Converted</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {feeData.fee_collections.map((collection, idx) => (
-                      <TableRow key={`collection-${idx}-${collection.id || ''}`}>
-                        <TableCell>{collection.collection_time ? formatDate(collection.collection_time) : 'N/A'}</TableCell>
-                        <TableCell className="font-medium">{collection.pool_name || 'Unknown Pool'}</TableCell>
-                        <TableCell>
-                          {collection.protocol 
-                            ? (collection.protocol === 'whirlpool' ? 'Orca Whirlpool' : 'Raydium')
-                            : 'Unknown'}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {typeof collection.usd_amount === 'number' 
-                            ? formatUsd(collection.usd_amount)
-                            : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {collection.converted_to_jitosol ? (
-                            <Badge variant="default" className="bg-green-100 text-green-800">Converted</Badge>
-                          ) : (
-                            <Badge variant="outline">Pending</Badge>
-                          )}
-                        </TableCell>
+                <div>
+                  {hasTimestampIssue() && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <div className="flex">
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-yellow-800">
+                            Data Timestamp Issue
+                          </h3>
+                          <div className="mt-1 text-sm text-yellow-700">
+                            All fee collection events are showing the same timestamp. This indicates the data may need to be refreshed.
+                            The portfolio tracking server will automatically update this data on its next run.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Position</TableHead>
+                        <TableHead>Token A</TableHead>
+                        <TableHead>Token B</TableHead>
+                        <TableHead className="text-right">USD Value</TableHead>
+                        <TableHead>Transaction</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {feeData.fee_collections.map((collection, idx) => (
+                        <TableRow key={`collection-${idx}-${collection.transaction_signature || collection.id || ''}`}>
+                          <TableCell>{collection.collection_time ? formatDate(collection.collection_time) : 'N/A'}</TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {collection.position_address 
+                              ? `${collection.position_address.substring(0, 8)}...${collection.position_address.substring(collection.position_address.length - 4)}`
+                              : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{collection.token_a_symbol || 'SOL'}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {collection.native_transfer_net_sol ? `${collection.native_transfer_net_sol.toFixed(6)}` : '0'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{collection.token_b_symbol || 'Token'}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {collection.token_amount ? `${collection.token_amount.toFixed(6)}` : '0'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {typeof collection.usd_amount === 'number' 
+                              ? formatUsd(collection.usd_amount)
+                              : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            <a 
+                              href={`https://solscan.io/tx/${collection.transaction_signature}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:text-blue-700 text-xs font-mono"
+                            >
+                              {collection.transaction_signature ? `${collection.transaction_signature.substring(0, 8)}...` : 'N/A'}
+                            </a>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
