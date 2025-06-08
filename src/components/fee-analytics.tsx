@@ -16,7 +16,7 @@ interface FeeAnalyticsProps {
 }
 
 export default function FeeAnalytics({ walletAddress }: FeeAnalyticsProps) {
-  const [timeframe, setTimeframe] = useState<string>('30d');
+  const [timeframe, setTimeframe] = useState<string>('24h');
   const { data: feeData, isLoading: isLoadingFees, isError: isErrorFees } = useFeeCollections(walletAddress, timeframe);
   const { data: portfolioData, isLoading: isLoadingPortfolio } = usePortfolio(walletAddress);
 
@@ -72,6 +72,7 @@ export default function FeeAnalytics({ walletAddress }: FeeAnalyticsProps) {
             <SelectValue placeholder="Select timeframe" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="24h">Last 24 Hours</SelectItem>
             <SelectItem value="7d">Last 7 Days</SelectItem>
             <SelectItem value="30d">Last 30 Days</SelectItem>
             <SelectItem value="90d">Last 90 Days</SelectItem>

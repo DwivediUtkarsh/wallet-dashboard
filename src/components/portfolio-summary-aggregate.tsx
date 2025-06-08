@@ -131,14 +131,14 @@ function SummaryCard({ title, value, description, icon: Icon, gradient, bgGradie
       
       {/* Content */}
       <div className="relative">
-        <CardHeader className="pb-2">
+      <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
             <div className={`p-2 rounded-lg bg-gradient-to-r ${gradient} text-white shadow-lg`}>
               <Icon className="h-4 w-4" />
             </div>
           </div>
-        </CardHeader>
+      </CardHeader>
         <CardContent className="space-y-2">
           <div className={`text-2xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
             {value}
@@ -152,9 +152,9 @@ function SummaryCard({ title, value, description, icon: Icon, gradient, bgGradie
                   {trendPrefix}{formatPercent(Math.abs(trend))}
                 </span>
               </div>
-            )}
-          </div>
-        </CardContent>
+          )}
+        </div>
+      </CardContent>
       </div>
     </Card>
   );

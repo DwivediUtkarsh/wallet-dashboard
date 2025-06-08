@@ -36,6 +36,34 @@ export interface TopTokenData {
   wallets: TokenWalletData[];
 }
 
+// For the exposure feature - tracks tokens across all protocols and positions
+export interface TokenExposureSource {
+  source_type: 'direct_solana' | 'direct_evm' | 'direct_sui' | 
+              'lp_position_a' | 'lp_position_b' | 
+              'marginfi_deposit' | 'marginfi_borrow' |
+              'kamino_supply' | 'kamino_borrow' |
+              'evm_liquidity' | 'evm_lending_supply' | 'evm_lending_borrow' | 'evm_staking' |
+              'sui_bluefin_a' | 'sui_bluefin_b' | 'sui_lend_deposit' | 'sui_lend_borrow' |
+              'hyperliquid_staking';
+  amount: number;
+  value_usd: number;
+  avg_price_usd: number;
+  wallet_count: number;
+}
+
+export interface TokenExposureData {
+  symbol: string;
+  name: string;
+  token_address: string;
+  total_amount: number;
+  total_value_usd: number;
+  price_usd: number;
+  portfolio_percentage: number;
+  wallet_count: number;
+  source_count: number;
+  sources: TokenExposureSource[];
+}
+
 export interface LPPosition {
   pool: string;
   token_a_symbol: string;

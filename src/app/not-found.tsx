@@ -31,7 +31,7 @@ export default function NotFound() {
 
         {/* Action Button */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-400">
-          <Link href="/">
+      <Link href="/">
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
@@ -39,7 +39,7 @@ export default function NotFound() {
               <HomeIcon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
               Return Home
             </Button>
-          </Link>
+      </Link>
         </div>
       </div>
     </div>

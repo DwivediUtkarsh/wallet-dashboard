@@ -11,21 +11,21 @@ export default function FeeAnalyticsPage() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-500/5">
-      <main className="container mx-auto py-6 px-4 md:px-6">
+    <main className="container mx-auto py-6 px-4 md:px-6">
         {/* Header Section */}
         <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           {/* Back Button */}
           <div className="mb-6 animate-in fade-in slide-in-from-left-2 duration-500">
-            <Link href={`/dashboard/${wallet}`}>
+        <Link href={`/dashboard/${wallet}`}>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 hover:from-blue-500/20 hover:to-purple-500/20 border border-blue-500/20 transition-all duration-200 group"
               >
                 <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-                Back to Dashboard
-              </Button>
-            </Link>
+            Back to Dashboard
+          </Button>
+        </Link>
           </div>
           
           {/* Title Section */}
@@ -36,9 +36,9 @@ export default function FeeAnalyticsPage() {
                 <div className="relative bg-background p-4 rounded-full border border-green-500/20">
                   <ChartBarIcon className="h-8 w-8 text-green-500" />
                 </div>
-              </div>
-            </div>
-            
+        </div>
+      </div>
+      
             <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-300">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
                 Fee Analytics
@@ -60,9 +60,9 @@ export default function FeeAnalyticsPage() {
         
         {/* Analytics Content */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-500">
-          <FeeAnalytics walletAddress={wallet} />
+      <FeeAnalytics walletAddress={wallet} />
         </div>
-      </main>
+    </main>
     </div>
   );
 } 

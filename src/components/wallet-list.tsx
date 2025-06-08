@@ -136,14 +136,14 @@ export default function WalletList({ wallets }: WalletListProps) {
               
               return (
                 <div
-                  key={wallet.address}
+                key={wallet.address} 
                   className="animate-in fade-in slide-in-from-bottom-2 duration-500"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <Card 
                     className="group relative overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1"
-                    onClick={() => router.push(`/dashboard/${wallet.address}`)}
-                  >
+                onClick={() => router.push(`/dashboard/${wallet.address}`)}
+              >
                     {/* Background gradient */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${chainConfig.bgGradient} opacity-30 group-hover:opacity-50 transition-opacity duration-300`} />
                     
@@ -171,7 +171,7 @@ export default function WalletList({ wallets }: WalletListProps) {
                         {/* Chain Badge */}
                         <Badge variant={chainConfig.variant} className="text-xs">
                           {chainConfig.name}
-                        </Badge>
+                  </Badge>
                       </div>
 
                       {/* Value */}
@@ -181,7 +181,7 @@ export default function WalletList({ wallets }: WalletListProps) {
                           <span>Total Value</span>
                         </div>
                         <div className={`text-lg font-bold bg-gradient-to-r ${chainConfig.gradient} bg-clip-text text-transparent`}>
-                          {formatDollar(wallet.total_value_usd || 0)}
+                  {formatDollar(wallet.total_value_usd || 0)}
                         </div>
                       </div>
                     </div>

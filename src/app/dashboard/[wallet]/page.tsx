@@ -107,7 +107,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-500/5">
-      <main className="container mx-auto py-6 px-4 md:px-6">
+    <main className="container mx-auto py-6 px-4 md:px-6">
         {/* Header Section */}
         <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
@@ -118,18 +118,18 @@ export default function DashboardPage() {
               <p className="text-muted-foreground">Detailed analytics for your wallet</p>
             </div>
             
-            {walletChain === 'solana' && (
-              <Link href={`/dashboard/${wallet}/fee-analytics`}>
+          {walletChain === 'solana' && (
+            <Link href={`/dashboard/${wallet}/fee-analytics`}>
                 <Button 
                   variant="outline" 
                   className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 hover:from-blue-500/20 hover:to-purple-500/20 border-blue-500/20 transition-all duration-200"
                 >
                   <ChartPieIcon className="h-4 w-4 mr-2" />
                   Fee Analytics
-                </Button>
-              </Link>
-            )}
-          </div>
+              </Button>
+            </Link>
+          )}
+        </div>
           
           {/* Wallet Address Card */}
           <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm overflow-hidden">
@@ -153,25 +153,25 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleCopyAddress}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleCopyAddress}
                   className="bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-all duration-200 group ml-auto"
-                >
+          >
                   <DocumentDuplicateIcon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
                   Copy Address
-                </Button>
+          </Button>
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
 
         {/* Content */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-100">
-          {isLoading ? (
-            <DashboardSkeleton />
-          ) : isError ? (
+      {isLoading ? (
+        <DashboardSkeleton />
+      ) : isError ? (
             <div className="animate-in zoom-in duration-500">
               <Card className="border-0 shadow-lg bg-red-500/5 backdrop-blur-sm">
                 <CardContent className="p-8">
@@ -182,23 +182,23 @@ export default function DashboardPage() {
                     <div>
                       <h3 className="text-xl font-semibold text-red-600 mb-2">Error Loading Portfolio</h3>
                       <p className="text-red-600/80 max-w-md">
-                        {error instanceof Error ? error.message : 'Failed to fetch portfolio data. Please try again.'}
-                      </p>
+            {error instanceof Error ? error.message : 'Failed to fetch portfolio data. Please try again.'}
+          </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          ) : data ? (
+        </div>
+      ) : data ? (
             <div className="space-y-8">
-              <PortfolioSummaryComponent summary={data.summary} chain={walletChain as 'solana' | 'hyperliquid' | 'evm' | 'sui'} />
-              
-              {walletChain === 'evm' && hasEvmData ? (
-                <EvmDashboard data={data.evm_data!} />
-              ) : walletChain === 'sui' && hasSuiData ? (
-                <SuiDashboard data={data.sui_data!} />
-              ) : walletChain === 'hyperliquid' ? (
-                <Tabs defaultValue="hyperliquid" className="w-full">
+          <PortfolioSummaryComponent summary={data.summary} chain={walletChain as 'solana' | 'hyperliquid' | 'evm' | 'sui'} />
+          
+          {walletChain === 'evm' && hasEvmData ? (
+            <EvmDashboard data={data.evm_data!} />
+          ) : walletChain === 'sui' && hasSuiData ? (
+            <SuiDashboard data={data.sui_data!} />
+          ) : walletChain === 'hyperliquid' ? (
+            <Tabs defaultValue="hyperliquid" className="w-full">
                   <TabsList className="grid w-full grid-cols-2 p-1 bg-gradient-to-r from-muted/50 to-muted/30 backdrop-blur-sm">
                     <TabsTrigger value="hyperliquid" className="text-sm font-medium">
                       ⚡ Hyperliquid
@@ -206,22 +206,22 @@ export default function DashboardPage() {
                     <TabsTrigger value="tokens" className="text-sm font-medium">
                       🪙 Tokens
                     </TabsTrigger>
-                  </TabsList>
-                  
+              </TabsList>
+              
                   <TabsContent value="hyperliquid" className="mt-6">
-                    <HyperliquidTable 
-                      account={data.hyperliquid_account} 
-                      positions={data.hyperliquid_positions || []} 
-                      staking={data.hyperliquid_staking}
-                    />
-                  </TabsContent>
-                  
+                <HyperliquidTable 
+                  account={data.hyperliquid_account} 
+                  positions={data.hyperliquid_positions || []} 
+                  staking={data.hyperliquid_staking}
+                />
+              </TabsContent>
+              
                   <TabsContent value="tokens" className="mt-6">
-                    <TokensTable tokens={data.token_balances} />
-                  </TabsContent>
-                </Tabs>
-              ) : (
-                <Tabs defaultValue="tokens" className="w-full">
+                <TokensTable tokens={data.token_balances} />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <Tabs defaultValue="tokens" className="w-full">
                   <TabsList className="grid w-full grid-cols-6 p-1 bg-gradient-to-r from-muted/50 to-muted/30 backdrop-blur-sm">
                     <TabsTrigger value="tokens" className="text-xs md:text-sm">🪙 Tokens</TabsTrigger>
                     <TabsTrigger value="whirlpool" className="text-xs md:text-sm">🌊 Whirlpool</TabsTrigger>
@@ -229,43 +229,43 @@ export default function DashboardPage() {
                     <TabsTrigger value="marginfi" className="text-xs md:text-sm">📊 Marginfi</TabsTrigger>
                     <TabsTrigger value="kamino" className="text-xs md:text-sm">🌾 Kamino</TabsTrigger>
                     <TabsTrigger value="fees" className="text-xs md:text-sm">💰 Fees</TabsTrigger>
-                  </TabsList>
-                  
+              </TabsList>
+              
                   <TabsContent value="tokens" className="mt-6">
-                    <TokensTable tokens={data.token_balances} />
-                  </TabsContent>
-                  
+                <TokensTable tokens={data.token_balances} />
+              </TabsContent>
+              
                   <TabsContent value="whirlpool" className="mt-6">
-                    <PositionsTable 
-                      positions={data.whirlpool_positions} 
-                      title="Orca Whirlpool Positions" 
-                      emptyMessage="No Whirlpool positions found" 
-                    />
-                  </TabsContent>
-                  
+                <PositionsTable 
+                  positions={data.whirlpool_positions} 
+                  title="Orca Whirlpool Positions" 
+                  emptyMessage="No Whirlpool positions found" 
+                />
+              </TabsContent>
+              
                   <TabsContent value="raydium" className="mt-6">
-                    <PositionsTable 
-                      positions={data.raydium_positions} 
-                      title="Raydium Positions" 
-                      emptyMessage="No Raydium positions found" 
-                    />
-                  </TabsContent>
-                  
+                <PositionsTable 
+                  positions={data.raydium_positions} 
+                  title="Raydium Positions" 
+                  emptyMessage="No Raydium positions found" 
+                />
+              </TabsContent>
+              
                   <TabsContent value="marginfi" className="mt-6">
-                    <MarginfiTable accounts={data.marginfi_accounts} />
-                  </TabsContent>
-                  
+                <MarginfiTable accounts={data.marginfi_accounts} />
+              </TabsContent>
+              
                   <TabsContent value="kamino" className="mt-6">
-                    <KaminoTable accounts={data.kamino_accounts} />
-                  </TabsContent>
-                  
+                <KaminoTable accounts={data.kamino_accounts} />
+              </TabsContent>
+              
                   <TabsContent value="fees" className="mt-6">
-                    <FeeGrowthChart walletAddress={wallet} />
-                  </TabsContent>
-                </Tabs>
-              )}
-            </div>
-          ) : (
+                <FeeGrowthChart walletAddress={wallet} />
+              </TabsContent>
+            </Tabs>
+          )}
+        </div>
+      ) : (
             <div className="animate-in zoom-in duration-500">
               <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
                 <CardContent className="p-8">
@@ -277,7 +277,7 @@ export default function DashboardPage() {
                       <h3 className="text-xl font-semibold mb-2">No Portfolio Data</h3>
                       <p className="text-muted-foreground max-w-md">
                         No portfolio data found for this wallet address. The wallet may be empty or not yet indexed.
-                      </p>
+          </p>
                     </div>
                   </div>
                 </CardContent>
@@ -285,7 +285,7 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </main>
+    </main>
     </div>
   );
 }
@@ -326,20 +326,20 @@ function DashboardSkeleton() {
         
         {/* Content Skeleton */}
         <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
-          <CardHeader>
-            <Skeleton className="h-6 w-32" />
-          </CardHeader>
-          <CardContent>
+        <CardHeader>
+          <Skeleton className="h-6 w-32" />
+        </CardHeader>
+        <CardContent>
             <div className="space-y-4">
               {Array(5).fill(0).map((_, i) => (
                 <div key={i} className="flex justify-between items-center">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
       </div>
     </div>
   );

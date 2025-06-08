@@ -9,8 +9,26 @@ import React, {
   useRef,
   useCallback,
 } from "react";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-import Decimal from "decimal.js";
+
+// Dynamic import for browser-only dependencies
+let PriceServiceConnection: typeof import("@pythnetwork/price-service-client").PriceServiceConnection | null = null;
+let Decimal: typeof import("decimal.js").default | null = null;
+
+// Initialize browser-only dependencies
+const initializeBrowserDependencies = async () => {
+  if (typeof window !== "undefined" && !PriceServiceConnection) {
+    try {
+      const [pythModule, decimalModule] = await Promise.all([
+        import("@pythnetwork/price-service-client"),
+        import("decimal.js"),
+      ]);
+      PriceServiceConnection = pythModule.PriceServiceConnection;
+      Decimal = decimalModule.default;
+    } catch (error) {
+      console.error("Failed to load browser dependencies:", error);
+    }
+  }
+};
 
 // Price data interface
 interface PriceData {
@@ -59,13 +77,24 @@ export const PriceProvider: React.FC<PriceProviderProps> = ({ children }) => {
   const [prices, setPrices] = useState<PriceData>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [watchedTokens, setWatchedTokens] = useState<Set<string>>(new Set());
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const pythConnection = useRef<PriceServiceConnection | null>(null);
+  const pythConnection = useRef<InstanceType<typeof import("@pythnetwork/price-service-client").PriceServiceConnection> | null>(null);
 
-  // Initialize Pyth connection
+  // Initialize browser dependencies and Pyth connection
   useEffect(() => {
-    pythConnection.current = new PriceServiceConnection("https://hermes.pyth.network");
+    const initializeConnection = async () => {
+      if (typeof window !== "undefined") {
+        await initializeBrowserDependencies();
+        if (PriceServiceConnection) {
+          pythConnection.current = new PriceServiceConnection("https://hermes.pyth.network");
+          setIsInitialized(true);
+        }
+      }
+    };
+
+    initializeConnection();
   }, []);
 
   // Add tokens to watch list
@@ -93,7 +122,7 @@ export const PriceProvider: React.FC<PriceProviderProps> = ({ children }) => {
 
   // Fetch prices from Pyth
   const refreshPrices = useCallback(async (): Promise<void> => {
-    if (!pythConnection.current || watchedTokens.size === 0) return;
+    if (!pythConnection.current || watchedTokens.size === 0 || !isInitialized || !Decimal) return;
 
     setLoading(true);
     try {
@@ -119,7 +148,7 @@ export const PriceProvider: React.FC<PriceProviderProps> = ({ children }) => {
       // Map feed IDs back to token addresses
       for (const [tokenAddress, feedId] of Object.entries(PYTH_FEEDS)) {
         if (watchedTokens.has(tokenAddress)) {
-          const feed = priceFeeds.find(f => f.id === feedId);
+          const feed = priceFeeds.find((f: { id: string }) => f.id === feedId);
           if (feed) {
             const priceData = feed.getPriceUnchecked();
             const emaData = feed.getEmaPriceUnchecked();
@@ -156,11 +185,11 @@ export const PriceProvider: React.FC<PriceProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [watchedTokens, prices]);
+  }, [watchedTokens, prices, isInitialized]);
 
   // Auto-refresh prices when watched tokens change
   useEffect(() => {
-    if (watchedTokens.size > 0) {
+    if (watchedTokens.size > 0 && isInitialized) {
       // Initial fetch
       refreshPrices();
 
@@ -182,7 +211,7 @@ export const PriceProvider: React.FC<PriceProviderProps> = ({ children }) => {
         intervalRef.current = null;
       }
     };
-  }, [watchedTokens.size, refreshPrices]);
+  }, [watchedTokens.size, refreshPrices, isInitialized]);
 
   return (
     <PriceContext.Provider
@@ -205,6 +234,20 @@ export const PriceProvider: React.FC<PriceProviderProps> = ({ children }) => {
 export const usePriceContext = () => {
   const context = useContext(PriceContext);
   if (!context) {
+    // Provide a fallback for SSR/SSG instead of throwing an error
+    if (typeof window === "undefined") {
+      console.warn("usePriceContext called during SSR/SSG - returning fallback values");
+      return {
+        prices: {},
+        setPrices: () => {},
+        loading: false,
+        setLoading: () => {},
+        addTokensToWatch: () => {},
+        removeTokensFromWatch: () => {},
+        getPriceForToken: () => null,
+        refreshPrices: async () => {},
+      };
+    }
     throw new Error("usePriceContext must be used within a PriceProvider");
   }
   return context;
