@@ -15,7 +15,7 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
           <CardTitle>Marginfi Accounts</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center p-6 text-gray-500">
+          <div className="flex justify-center p-6 text-muted-foreground">
             No Marginfi accounts found
           </div>
         </CardContent>
@@ -31,12 +31,12 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg">
                 Marginfi Account
-                <span className="ml-2 text-sm font-normal text-gray-500">
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
                   {shortenAddress(account.account_address)}
                 </span>
               </CardTitle>
               <div className="flex items-center gap-1">
-                <span className="text-sm text-gray-500">Health:</span>
+                <span className="text-sm text-muted-foreground">Health:</span>
                 <span className={`text-sm font-semibold ${getHealthColor(account.health_status)}`}>
                   {account.health_ratio.toFixed(2)}
                 </span>
@@ -64,7 +64,7 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-base font-semibold mb-2">Deposits</h3>
+                <h3 className="text-base font-semibold mb-2 text-foreground">Deposits</h3>
                 {account.deposits.length > 0 ? (
                   <Table>
                     <TableHeader>
@@ -78,14 +78,14 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
                     <TableBody>
                       {account.deposits.map((deposit, index) => (
                         <TableRow key={index}>
-                          <TableCell>{deposit.token}</TableCell>
-                          <TableCell className="text-right font-mono">
+                          <TableCell className="text-foreground">{deposit.token}</TableCell>
+                          <TableCell className="text-right font-mono text-foreground">
                             {formatNumber(deposit.amount)}
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right text-foreground">
                             {formatDollar(deposit.value_usd)}
                           </TableCell>
-                          <TableCell className="text-right text-green-600">
+                          <TableCell className="text-right text-green-600 dark:text-green-400">
                             {formatPercent(deposit.apr)}
                           </TableCell>
                         </TableRow>
@@ -93,14 +93,14 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="flex justify-center p-4 text-gray-500 text-sm">
+                  <div className="flex justify-center p-4 text-muted-foreground text-sm">
                     No deposits
                   </div>
                 )}
               </div>
 
               <div>
-                <h3 className="text-base font-semibold mb-2">Borrows</h3>
+                <h3 className="text-base font-semibold mb-2 text-foreground">Borrows</h3>
                 {account.borrows.length > 0 ? (
                   <Table>
                     <TableHeader>
@@ -114,14 +114,14 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
                     <TableBody>
                       {account.borrows.map((borrow, index) => (
                         <TableRow key={index}>
-                          <TableCell>{borrow.token}</TableCell>
-                          <TableCell className="text-right font-mono">
+                          <TableCell className="text-foreground">{borrow.token}</TableCell>
+                          <TableCell className="text-right font-mono text-foreground">
                             {formatNumber(borrow.amount)}
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right text-foreground">
                             {formatDollar(borrow.value_usd)}
                           </TableCell>
-                          <TableCell className="text-right text-red-600">
+                          <TableCell className="text-right text-red-600 dark:text-red-400">
                             {formatPercent(borrow.apr)}
                           </TableCell>
                         </TableRow>
@@ -129,7 +129,7 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="flex justify-center p-4 text-gray-500 text-sm">
+                  <div className="flex justify-center p-4 text-muted-foreground text-sm">
                     No borrows
                   </div>
                 )}
@@ -149,9 +149,9 @@ interface SummaryItemProps {
 
 function SummaryItem({ label, value }: SummaryItemProps) {
   return (
-    <div className="bg-gray-50 p-3 rounded-md">
-      <div className="text-gray-500 text-sm">{label}</div>
-      <div className="font-semibold">{value}</div>
+    <div className="bg-muted/50 p-3 rounded-md border">
+      <div className="text-muted-foreground text-sm">{label}</div>
+      <div className="font-semibold text-foreground">{value}</div>
     </div>
   );
 }
@@ -159,25 +159,25 @@ function SummaryItem({ label, value }: SummaryItemProps) {
 function getHealthColor(status: string): string {
   switch (status) {
     case 'Healthy':
-      return 'text-green-600';
+      return 'text-green-600 dark:text-green-400';
     case 'Warning':
-      return 'text-yellow-600';
+      return 'text-yellow-600 dark:text-yellow-400';
     case 'Danger':
-      return 'text-red-600';
+      return 'text-red-600 dark:text-red-400';
     default:
-      return 'text-gray-600';
+      return 'text-muted-foreground';
   }
 }
 
 function getHealthBadgeColor(status: string): string {
   switch (status) {
     case 'Healthy':
-      return 'bg-green-100 text-green-800';
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
     case 'Warning':
-      return 'bg-yellow-100 text-yellow-800';
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
     case 'Danger':
-      return 'bg-red-100 text-red-800';
+      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-muted text-muted-foreground';
   }
 } 

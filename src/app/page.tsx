@@ -16,14 +16,7 @@ export default function HomePage() {
   const { data: summaryData, isLoading: isLoadingSummary } = usePortfolioSummary();
   const { data: topTokensData, isLoading: isLoadingTopTokens } = useTopTokens(20);
   const { exposures: exposureData, isLoading: isLoadingExposure } = useExposure(20);
-  const [activeTab, setActiveTab] = useState('all');
   const [activeSection, setActiveSection] = useState('wallets');
-
-  // Group wallets by chain if available
-  const solanaWallets = walletsData?.filter(wallet => wallet.chain === 'solana') || [];
-  const evmWallets = walletsData?.filter(wallet => wallet.chain === 'evm') || [];
-  const hyperliquidWallets = walletsData?.filter(wallet => wallet.chain === 'hyperliquid') || [];
-  const suiWallets = walletsData?.filter(wallet => wallet.chain === 'sui') || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-500/5">
@@ -40,12 +33,12 @@ export default function HomePage() {
 
         {/* Portfolio Summary */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-100">
-      {isLoadingSummary ? (
+          {isLoadingSummary ? (
             <Card className="border-0 shadow-lg bg-gradient-to-r from-card/50 to-card/30 backdrop-blur-sm">
-          <CardHeader>
-            <Skeleton className="h-8 w-1/3" />
-          </CardHeader>
-          <CardContent>
+              <CardHeader>
+                <Skeleton className="h-8 w-1/3" />
+              </CardHeader>
+              <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                   {Array(6).fill(0).map((_, i) => (
                     <div
@@ -55,13 +48,13 @@ export default function HomePage() {
                     >
                       <Skeleton className="h-32 rounded-lg" />
                     </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        summaryData && <PortfolioSummaryAggregate data={summaryData} />
-      )}
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            summaryData && <PortfolioSummaryAggregate data={summaryData} />
+          )}
         </div>
 
         {/* Main Content Tabs */}
@@ -80,102 +73,50 @@ export default function HomePage() {
             </TabsList>
             
             <TabsContent value="wallets" className="space-y-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-5 p-1 bg-gradient-to-r from-muted/50 to-muted/30 backdrop-blur-sm">
-                  <TabsTrigger value="all" className="text-xs md:text-sm">
-                    All ({walletsData?.length || 0})
-                  </TabsTrigger>
-                  <TabsTrigger value="solana" className="text-xs md:text-sm">
-                    🟣 Solana ({solanaWallets.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="evm" className="text-xs md:text-sm">
-                    🔷 EVM ({evmWallets.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="hyperliquid" className="text-xs md:text-sm">
-                    ⚡ HL ({hyperliquidWallets.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="sui" className="text-xs md:text-sm">
-                    🌊 Sui ({suiWallets.length})
-                  </TabsTrigger>
-                </TabsList>
-
-                <div className="space-y-4">
-            <TabsContent value="all">
               {isLoadingWallets ? (
-                      <div className="animate-pulse">
-                        <Skeleton className="h-64 rounded-lg" />
-                      </div>
-              ) : (
-                      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <WalletList wallets={walletsData || []} />
-                      </div>
-              )}
-            </TabsContent>
-            <TabsContent value="solana">
-              {isLoadingWallets ? (
-                      <Skeleton className="h-64 rounded-lg" />
-              ) : (
-                <WalletList wallets={solanaWallets} />
-              )}
-            </TabsContent>
-            <TabsContent value="evm">
-              {isLoadingWallets ? (
-                      <Skeleton className="h-64 rounded-lg" />
-              ) : (
-                <WalletList wallets={evmWallets} />
-              )}
-            </TabsContent>
-            <TabsContent value="hyperliquid">
-              {isLoadingWallets ? (
-                      <Skeleton className="h-64 rounded-lg" />
-              ) : (
-                <WalletList wallets={hyperliquidWallets} />
-              )}
-            </TabsContent>
-            <TabsContent value="sui">
-              {isLoadingWallets ? (
-                      <Skeleton className="h-64 rounded-lg" />
-              ) : (
-                <WalletList wallets={suiWallets} />
-              )}
-            </TabsContent>
-                </div>
-          </Tabs>
-        </TabsContent>
-        
-        <TabsContent value="tokens">
-          {isLoadingTopTokens ? (
                 <div className="animate-pulse">
                   <Skeleton className="h-64 rounded-lg" />
                 </div>
-          ) : (
+              ) : (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  <WalletList wallets={walletsData || []} />
+                </div>
+              )}
+            </TabsContent>
+        
+            <TabsContent value="tokens">
+              {isLoadingTopTokens ? (
+                <div className="animate-pulse">
+                  <Skeleton className="h-64 rounded-lg" />
+                </div>
+              ) : (
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                   {topTokensData && summaryData && (
-              <TopTokensTable 
-                tokens={topTokensData} 
-                totalPortfolioValue={summaryData.summary.total_value} 
-              />
+                    <TopTokensTable 
+                      tokens={topTokensData} 
+                      totalPortfolioValue={summaryData.summary.total_value} 
+                    />
                   )}
                 </div>
-          )}
-        </TabsContent>
+              )}
+            </TabsContent>
 
-        <TabsContent value="exposure">
-          {isLoadingExposure ? (
+            <TabsContent value="exposure">
+              {isLoadingExposure ? (
                 <div className="animate-pulse">
                   <Skeleton className="h-64 rounded-lg" />
                 </div>
-          ) : (
+              ) : (
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                   {exposureData && (
-              <ExposureTable 
-                exposures={exposureData} 
-              />
+                    <ExposureTable 
+                      exposures={exposureData} 
+                    />
                   )}
                 </div>
-          )}
-        </TabsContent>
-      </Tabs>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

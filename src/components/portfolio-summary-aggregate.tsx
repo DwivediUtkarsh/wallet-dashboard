@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDollar, formatPercent } from "@/lib/utils";
+import { formatPercent, formatDollarFixed } from "@/lib/utils";
 import { PortfolioSummaryData } from "@/types/api";
 import { 
   ChartBarIcon, 
@@ -43,7 +43,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   const cards: SummaryCardProps[] = [
     {
       title: "Total Value",
-      value: formatDollar(data.summary.total_value),
+      value: formatDollarFixed(data.summary.total_value),
       description: `${data.wallet_count} Wallets`,
       icon: WalletIcon,
       gradient: "from-blue-500 to-cyan-500",
@@ -51,7 +51,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     },
     {
       title: "Solana Value",
-      value: formatDollar(solanaValue),
+      value: formatDollarFixed(solanaValue),
       description: `${data.token_balances.length} Tokens`,
       icon: ChartBarIcon,
       gradient: "from-purple-500 to-pink-500",
@@ -59,7 +59,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     },
     {
       title: "Uncollected Fees",
-      value: formatDollar(totalFees),
+      value: formatDollarFixed(totalFees),
       description: hasSui ? "All protocols" : "LP positions",
       icon: BanknotesIcon,
       gradient: "from-green-500 to-emerald-500",
@@ -71,7 +71,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   if (hasHyperliquid) {
     cards.push({
       title: "Hyperliquid Value",
-      value: formatDollar(data.summary.hyperliquid_value),
+      value: formatDollarFixed(data.summary.hyperliquid_value),
       description: `${data.hyperliquid_summary.account_count} Accounts${data.summary.hyperliquid_staking_value > 0 ? ` • $${data.summary.hyperliquid_staking_value.toLocaleString()} Staked` : ''}`,
       icon: ArrowTrendingUpIcon,
       gradient: "from-orange-500 to-red-500",
@@ -83,7 +83,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   if (hasEvm && data.evm_summary) {
     cards.push({
       title: "EVM Value",
-      value: formatDollar(data.evm_summary.total_value),
+      value: formatDollarFixed(data.evm_summary.total_value),
       description: `${data.evm_summary.chain_count} Chains`,
       icon: CurrencyDollarIcon,
       gradient: "from-indigo-500 to-blue-500",
@@ -94,7 +94,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   if (hasSui && data.sui_summary) {
     cards.push({
       title: "Sui Value",
-      value: formatDollar(data.sui_summary.total_value),
+      value: formatDollarFixed(data.sui_summary.total_value),
       description: `${data.sui_summary.wallet_count} Wallets`,
       icon: ArrowTrendingUpIcon,
       gradient: "from-teal-500 to-cyan-500",

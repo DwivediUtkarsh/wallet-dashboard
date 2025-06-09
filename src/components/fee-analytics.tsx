@@ -200,7 +200,10 @@ export default function FeeAnalytics({ walletAddress }: FeeAnalyticsProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {[...(portfolioData?.whirlpool_positions || []), ...(portfolioData?.raydium_positions || [])]
+                    {[
+                      ...(portfolioData?.whirlpool_positions || []).map(pos => ({...pos, protocol: 'whirlpool'})),
+                      ...(portfolioData?.raydium_positions || []).map(pos => ({...pos, protocol: 'raydium'}))
+                    ]
                       .sort((a, b) => (b.uncollected_fees_usd || 0) - (a.uncollected_fees_usd || 0))
                       .map((position, index) => (
                         <TableRow key={`pos-${index}-${position.protocol || 'unknown'}-${position.position_address || position.pool || ''}`}>

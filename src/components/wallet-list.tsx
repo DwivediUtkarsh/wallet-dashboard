@@ -2,15 +2,19 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { WalletInfo } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDollar } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { 
   MagnifyingGlassIcon, 
   WalletIcon,
   ArrowTopRightOnSquareIcon,
-  CurrencyDollarIcon
+  CurrencyDollarIcon,
+  Squares2X2Icon,
+  ListBulletIcon
 } from "@heroicons/react/24/outline";
 
 interface WalletListProps {
@@ -21,6 +25,7 @@ export default function WalletList({ wallets }: WalletListProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
 
   // Filter wallets based on search term and active tab
   const filteredWallets = wallets.filter(wallet => {
@@ -32,7 +37,7 @@ export default function WalletList({ wallets }: WalletListProps) {
     } else {
       return matchesSearch && wallet.chain === activeTab;
     }
-  });
+  }).sort((a, b) => (b.total_value_usd || 0) - (a.total_value_usd || 0)); // Sort by total value descending
 
   // Group wallets by chain for wallet count display
   const solanaWallets = wallets.filter(w => w.chain === 'solana');
@@ -80,56 +85,7 @@ export default function WalletList({ wallets }: WalletListProps) {
     }
   };
 
-  return (
-    <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
-      <CardHeader className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg text-white">
-              <WalletIcon className="h-5 w-5" />
-            </div>
-            Wallets
-          </CardTitle>
-          <div className="relative w-full md:w-1/3">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search wallets..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-background/50 backdrop-blur-sm"
-            />
-          </div>
-        </div>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-5 p-1 bg-gradient-to-r from-muted/50 to-muted/30 backdrop-blur-sm">
-            <TabsTrigger value="all" className="text-xs md:text-sm">
-              All ({wallets.length})
-            </TabsTrigger>
-            <TabsTrigger value="solana" className="text-xs md:text-sm">
-              🟣 Solana ({solanaWallets.length})
-            </TabsTrigger>
-            <TabsTrigger value="evm" className="text-xs md:text-sm">
-              🔷 EVM ({evmWallets.length})
-            </TabsTrigger>
-            <TabsTrigger value="hyperliquid" className="text-xs md:text-sm">
-              ⚡ HL ({hyperliquidWallets.length})
-            </TabsTrigger>
-            <TabsTrigger value="sui" className="text-xs md:text-sm">
-              🌊 Sui ({suiWallets.length})
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </CardHeader>
-      
-      <CardContent>
-        {filteredWallets.length === 0 ? (
-          <div className="text-center py-12">
-            <WalletIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-lg font-medium text-muted-foreground">No wallets found</p>
-            <p className="text-sm text-muted-foreground">Try adjusting your search terms</p>
-          </div>
-        ) : (
+  const CardView = () => (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredWallets.map((wallet, index) => {
               const chainConfig = getChainConfig(wallet.chain || 'unknown');
@@ -190,6 +146,142 @@ export default function WalletList({ wallets }: WalletListProps) {
               );
             })}
           </div>
+  );
+
+  const ListView = () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Wallet</TableHead>
+          <TableHead>Address</TableHead>
+          <TableHead>Chain</TableHead>
+          <TableHead className="text-right">Total Value</TableHead>
+          <TableHead className="w-10"></TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {filteredWallets.map((wallet) => {
+          const chainConfig = getChainConfig(wallet.chain || 'unknown');
+          
+          return (
+            <TableRow 
+              key={wallet.address}
+              className="cursor-pointer hover:bg-muted/50 transition-colors duration-200"
+              onClick={() => router.push(`/dashboard/${wallet.address}`)}
+            >
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg bg-gradient-to-r ${chainConfig.gradient} text-white flex-shrink-0`}>
+                    <WalletIcon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm">
+                      {wallet.label || 'Unlabeled Wallet'}
+                    </div>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="font-mono text-sm text-muted-foreground">
+                  {wallet.address.substring(0, 8)}...{wallet.address.substring(wallet.address.length - 6)}
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge variant={chainConfig.variant} className="text-xs">
+                  {chainConfig.name}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className={`text-lg font-bold bg-gradient-to-r ${chainConfig.gradient} bg-clip-text text-transparent`}>
+                  {formatDollar(wallet.total_value_usd || 0)}
+                </div>
+              </TableCell>
+              <TableCell>
+                <ArrowTopRightOnSquareIcon className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
+  );
+
+  return (
+    <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
+      <CardHeader className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg text-white">
+              <WalletIcon className="h-5 w-5" />
+            </div>
+            Wallets
+          </CardTitle>
+          <div className="flex items-center gap-4">
+            {/* View toggle */}
+            <div className="flex items-center border rounded-lg p-1 bg-background/50">
+              <Button
+                variant={viewMode === 'card' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('card')}
+                className="h-8 px-3"
+              >
+                <Squares2X2Icon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="h-8 px-3"
+              >
+                <ListBulletIcon className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* Search */}
+            <div className="relative w-full md:w-64">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search wallets..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-background/50 backdrop-blur-sm"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-5 p-1 bg-gradient-to-r from-muted/50 to-muted/30 backdrop-blur-sm">
+            <TabsTrigger value="all" className="text-xs md:text-sm">
+              All ({wallets.length})
+            </TabsTrigger>
+            <TabsTrigger value="solana" className="text-xs md:text-sm">
+              🟣 Solana ({solanaWallets.length})
+            </TabsTrigger>
+            <TabsTrigger value="evm" className="text-xs md:text-sm">
+              🔷 EVM ({evmWallets.length})
+            </TabsTrigger>
+            <TabsTrigger value="hyperliquid" className="text-xs md:text-sm">
+              ⚡ HL ({hyperliquidWallets.length})
+            </TabsTrigger>
+            <TabsTrigger value="sui" className="text-xs md:text-sm">
+              🌊 Sui ({suiWallets.length})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </CardHeader>
+      
+      <CardContent>
+        {filteredWallets.length === 0 ? (
+          <div className="text-center py-12">
+            <WalletIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-lg font-medium text-muted-foreground">No wallets found</p>
+            <p className="text-sm text-muted-foreground">Try adjusting your search terms</p>
+          </div>
+        ) : (
+          <>
+            {viewMode === 'card' ? <CardView /> : <ListView />}
+          </>
         )}
       </CardContent>
     </Card>
