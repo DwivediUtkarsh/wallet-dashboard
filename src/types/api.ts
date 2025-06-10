@@ -420,3 +420,52 @@ export interface SuiSummary {
   total_value: number;
   wallet_count: number;
 } 
+
+// Lending Summary Types
+export interface LendingPosition {
+  type: 'deposit' | 'borrow' | 'supply';
+  token_symbol: string;
+  token_address: string;
+  amount: number;
+  value_usd: number;
+  apr: number;
+}
+
+export interface LendingAccount {
+  wallet_address: string;
+  wallet_label: string;
+  account_address: string;
+  protocol: string;
+  chain: string;
+  chain_id?: string;
+  positions: LendingPosition[];
+  total_supplied_value: number;
+  total_borrowed_value: number;
+  net_value_usd: number;
+  health_ratio: number;
+  updated_at: string;
+}
+
+export interface LendingProtocolBreakdown {
+  positions: number;
+  net_value: number;
+}
+
+export interface LendingSummary {
+  total_supplied_value_usd: number;
+  total_borrowed_value_usd: number;
+  net_value_usd: number;
+  position_count: number;
+  wallet_count: number;
+  protocol_breakdown: {
+    marginfi: LendingProtocolBreakdown;
+    evm_protocols: LendingProtocolBreakdown;
+    suilend: LendingProtocolBreakdown;
+  };
+}
+
+export interface LendingSummaryData {
+  summary: LendingSummary;
+  positions: LendingAccount[];
+  last_updated: string;
+} 

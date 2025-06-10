@@ -1,11 +1,12 @@
 'use client';
 
-import { useWallets, usePortfolioSummary, useTopTokens } from '@/hooks/use-portfolio';
+import { useWallets, usePortfolioSummary, useTopTokens, useLendingSummary } from '@/hooks/use-portfolio';
 import { useExposure } from '@/hooks/useExposure';
 import { useState } from 'react';
 import WalletList from '@/components/wallet-list';
 import TopTokensTable from '@/components/top-tokens-table';
 import ExposureTable from '@/components/exposure-table';
+import LendingTable from '@/components/lending-table';
 import PortfolioSummaryAggregate from '@/components/portfolio-summary-aggregate';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,6 +17,7 @@ export default function HomePage() {
   const { data: summaryData, isLoading: isLoadingSummary } = usePortfolioSummary();
   const { data: topTokensData, isLoading: isLoadingTopTokens } = useTopTokens(20);
   const { exposures: exposureData, isLoading: isLoadingExposure } = useExposure(20);
+  const { data: lendingData, isLoading: isLoadingLending } = useLendingSummary();
   const [activeSection, setActiveSection] = useState('wallets');
 
   return (
@@ -24,7 +26,7 @@ export default function HomePage() {
         {/* Hero Section */}
         <div className="text-center space-y-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
-            Portfolio Dashboard
+            Analytics HUD
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Track your multi-chain wallet positions across different protocols with real-time analytics
@@ -60,7 +62,7 @@ export default function HomePage() {
         {/* Main Content Tabs */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-200">
           <Tabs value={activeSection} onValueChange={setActiveSection} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 p-1 bg-muted/50 backdrop-blur-sm">
+            <TabsList className="grid w-full grid-cols-4 p-1 bg-muted/50 backdrop-blur-sm">
               <TabsTrigger value="wallets" className="text-sm font-medium">
                 💼 Wallets
               </TabsTrigger>
@@ -69,6 +71,9 @@ export default function HomePage() {
               </TabsTrigger>
               <TabsTrigger value="exposure" className="text-sm font-medium">
                 📊 Exposure
+              </TabsTrigger>
+              <TabsTrigger value="lending" className="text-sm font-medium">
+                🏦 Lending
               </TabsTrigger>
             </TabsList>
             
@@ -111,6 +116,22 @@ export default function HomePage() {
                   {exposureData && (
                     <ExposureTable 
                       exposures={exposureData} 
+                    />
+                  )}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="lending">
+              {isLoadingLending ? (
+                <div className="animate-pulse">
+                  <Skeleton className="h-64 rounded-lg" />
+                </div>
+              ) : (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  {lendingData && (
+                    <LendingTable 
+                      data={lendingData} 
                     />
                   )}
                 </div>

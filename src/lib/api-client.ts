@@ -1,6 +1,6 @@
 // API client for connecting to the portfolio tracking backend
 
-import { PortfolioData, WalletInfo, PortfolioSummaryData, TopTokenData, TokenExposureData } from '@/types/api';
+import { PortfolioData, WalletInfo, PortfolioSummaryData, TopTokenData, TokenExposureData, LendingSummaryData } from '@/types/api';
 
 // Use proxy route for production, direct API for development
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -211,4 +211,11 @@ export async function getTopTokens(limit = 20): Promise<TopTokenData[]> {
  */
 export async function getExposure(limit = 20): Promise<TokenExposureData[]> {
   return fetchWithErrorHandling<TokenExposureData[]>(`/portfolio/exposure?limit=${limit}`);
+}
+
+/**
+ * Get comprehensive lending and borrowing summary across all wallets and protocols
+ */
+export async function getLendingSummary(): Promise<LendingSummaryData> {
+  return fetchWithErrorHandling<LendingSummaryData>('/lending-summary');
 } 

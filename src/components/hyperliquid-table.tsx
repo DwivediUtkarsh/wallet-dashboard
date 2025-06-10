@@ -46,17 +46,17 @@ export default function HyperliquidTable({ account, positions, staking }: Hyperl
               <SummaryItem
                 label="24h PnL"
                 value={formatDollar(account.pnl_24h)}
-                valueClass={account.pnl_24h >= 0 ? "text-green-600" : "text-red-600"}
+                valueClass={account.pnl_24h >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}
               />
               <SummaryItem
                 label="Unrealized PnL"
                 value={formatDollar(account.unrealized_pnl)}
-                valueClass={account.unrealized_pnl >= 0 ? "text-green-600" : "text-red-600"}
+                valueClass={account.unrealized_pnl >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}
               />
               <SummaryItem
                 label="Funding (24h)"
                 value={formatDollar(account.funding_paid_24h)}
-                valueClass={account.funding_paid_24h <= 0 ? "text-green-600" : "text-red-600"}
+                valueClass={account.funding_paid_24h <= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}
               />
             </div>
           </CardContent>
@@ -104,11 +104,11 @@ export default function HyperliquidTable({ account, positions, staking }: Hyperl
                         </TableCell>
                         <TableCell className="text-right">
                           {delegation.locked_until ? (
-                            <span className="text-yellow-600">
+                            <span className="text-yellow-600 dark:text-yellow-400">
                               Locked until {new Date(delegation.locked_until).toLocaleDateString()}
                             </span>
                           ) : (
-                            <span className="text-green-600">Liquid</span>
+                            <span className="text-green-600 dark:text-green-400">Liquid</span>
                           )}
                         </TableCell>
                       </TableRow>
@@ -168,13 +168,13 @@ export default function HyperliquidTable({ account, positions, staking }: Hyperl
                     <TableCell className="text-right font-mono">
                       {position.leverage}x
                     </TableCell>
-                    <TableCell className={`text-right ${position.pnl >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    <TableCell className={`text-right ${position.pnl >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
                       {formatDollar(position.pnl)}
                     </TableCell>
-                    <TableCell className={`text-right ${position.pnl_percent >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    <TableCell className={`text-right ${position.pnl_percent >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
                       {formatPercent(position.pnl_percent / 100)}
                     </TableCell>
-                    <TableCell className={`text-right ${position.funding_usd <= 0 ? "text-green-600" : "text-red-600"}`}>
+                    <TableCell className={`text-right ${position.funding_usd <= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
                       {formatDollar(position.funding_usd)}
                     </TableCell>
                     <TableCell className="text-right font-mono">
@@ -202,9 +202,9 @@ interface SummaryItemProps {
 
 function SummaryItem({ label, value, valueClass = "" }: SummaryItemProps) {
   return (
-    <div className="bg-gray-50 p-3 rounded-md">
-      <div className="text-gray-500 text-sm">{label}</div>
-      <div className={`font-semibold ${valueClass}`}>{value}</div>
+    <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-md border border-gray-200 dark:border-gray-700">
+      <div className="text-gray-500 dark:text-gray-400 text-sm">{label}</div>
+      <div className={`font-semibold text-gray-900 dark:text-gray-100 ${valueClass}`}>{value}</div>
     </div>
   );
 }
@@ -212,12 +212,12 @@ function SummaryItem({ label, value, valueClass = "" }: SummaryItemProps) {
 function RiskBadge({ risk }: { risk: string }) {
   switch (risk) {
     case 'low':
-      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">LOW</Badge>;
+      return <Badge variant="outline" className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">LOW</Badge>;
     case 'medium':
-      return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">MEDIUM</Badge>;
+      return <Badge variant="outline" className="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800">MEDIUM</Badge>;
     case 'high':
-      return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">HIGH</Badge>;
+      return <Badge variant="outline" className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800">HIGH</Badge>;
     default:
-      return <Badge variant="outline">{risk.toUpperCase()}</Badge>;
+      return <Badge variant="outline" className="dark:text-gray-300 dark:border-gray-600">{risk.toUpperCase()}</Badge>;
   }
 } 

@@ -12,7 +12,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const isWalletPage = pathname.startsWith('/dashboard/');
+  const isWalletPage = pathname?.startsWith('/dashboard/') || false;
 
   useEffect(() => {
     setMounted(true);

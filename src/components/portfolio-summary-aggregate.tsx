@@ -7,7 +7,8 @@ import {
   CurrencyDollarIcon, 
   BanknotesIcon,
   ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon
+  ArrowTrendingDownIcon,
+  ShareIcon
 } from "@heroicons/react/24/outline";
 
 interface PortfolioSummaryAggregateProps {
@@ -40,7 +41,12 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   // Calculate total fees including Sui if available
   const totalFees = data.summary.total_fees + (data.sui_summary?.total_bluefin_fees || 0);
 
-  const cards: SummaryCardProps[] = [
+  // Hardcoded number of shares and calculate value per share
+  const numberOfShares = 57888.67;
+  const valuePerShare = data.summary.total_value / numberOfShares;
+
+  // First line cards: Total Value, Shares Info, Uncollected Fees
+  const firstLineCards: SummaryCardProps[] = [
     {
       title: "Total Value",
       value: formatDollarFixed(data.summary.total_value),
@@ -50,12 +56,12 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
       bgGradient: "from-blue-500/10 to-cyan-500/10"
     },
     {
-      title: "Solana Value",
-      value: formatDollarFixed(solanaValue),
-      description: `${data.token_balances.length} Tokens`,
-      icon: ChartBarIcon,
-      gradient: "from-purple-500 to-pink-500",
-      bgGradient: "from-purple-500/10 to-pink-500/10"
+      title: "Shares Info",
+      value: numberOfShares.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      description: `$${valuePerShare.toFixed(4)} per share`,
+      icon: ShareIcon,
+      gradient: "from-amber-500 to-orange-500",
+      bgGradient: "from-amber-500/10 to-orange-500/10"
     },
     {
       title: "Uncollected Fees",
@@ -67,9 +73,21 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     }
   ];
 
-  // Add conditional cards
+  // Second line cards: Solana Value and conditional cards
+  const secondLineCards: SummaryCardProps[] = [
+    {
+      title: "Solana Value",
+      value: formatDollarFixed(solanaValue),
+      description: `${data.token_balances.length} Tokens`,
+      icon: ChartBarIcon,
+      gradient: "from-purple-500 to-pink-500",
+      bgGradient: "from-purple-500/10 to-pink-500/10"
+    }
+  ];
+
+  // Add conditional cards to second line
   if (hasHyperliquid) {
-    cards.push({
+    secondLineCards.push({
       title: "Hyperliquid Value",
       value: formatDollarFixed(data.summary.hyperliquid_value),
       description: `${data.hyperliquid_summary.account_count} Accounts${data.summary.hyperliquid_staking_value > 0 ? ` • $${data.summary.hyperliquid_staking_value.toLocaleString()} Staked` : ''}`,
@@ -81,7 +99,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   }
 
   if (hasEvm && data.evm_summary) {
-    cards.push({
+    secondLineCards.push({
       title: "EVM Value",
       value: formatDollarFixed(data.evm_summary.total_value),
       description: `${data.evm_summary.chain_count} Chains`,
@@ -92,7 +110,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   }
 
   if (hasSui && data.sui_summary) {
-    cards.push({
+    secondLineCards.push({
       title: "Sui Value",
       value: formatDollarFixed(data.sui_summary.total_value),
       description: `${data.sui_summary.wallet_count} Wallets`,
@@ -104,12 +122,26 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {cards.map((card, index) => (
+      {/* First line: Total Value, Shares Info, Uncollected Fees */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {firstLineCards.map((card, index) => (
           <div
             key={card.title}
             className="animate-in fade-in zoom-in duration-500"
             style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <SummaryCard {...card} />
+          </div>
+        ))}
+      </div>
+
+      {/* Second line: Solana Value and conditional cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {secondLineCards.map((card, index) => (
+          <div
+            key={card.title}
+            className="animate-in fade-in zoom-in duration-500"
+            style={{ animationDelay: `${(index + 3) * 100}ms` }}
           >
             <SummaryCard {...card} />
           </div>

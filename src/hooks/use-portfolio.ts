@@ -1,8 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getPortfolioData, getPortfolioSummary, getTopTokens, getWallets } from '@/lib/api-client';
-import { PortfolioData, PortfolioSummaryData, TopTokenData, WalletInfo } from '@/types/api';
+import { getPortfolioData, getPortfolioSummary, getTopTokens, getWallets, getLendingSummary } from '@/lib/api-client';
+import { PortfolioData, PortfolioSummaryData, TopTokenData, WalletInfo, LendingSummaryData } from '@/types/api';
 
 /**
  * Hook to fetch portfolio data for a specific wallet
@@ -49,6 +49,18 @@ export function useTopTokens(limit = 20) {
   return useQuery<TopTokenData[], Error>({
     queryKey: ['top-tokens', limit],
     queryFn: () => getTopTokens(limit),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+}
+
+/**
+ * Hook to fetch lending and borrowing summary across all wallets
+ */
+export function useLendingSummary() {
+  return useQuery<LendingSummaryData, Error>({
+    queryKey: ['lending-summary'],
+    queryFn: getLendingSummary,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   });

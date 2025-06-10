@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useFeeCollections } from '@/hooks/use-fee-collections';
 import { usePortfolio } from '@/hooks/use-portfolio';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { format } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Skeleton } from './ui/skeleton';
+import { getTokenMetadata, TokenMetadata } from '@/utils/tokenUtils';
 
 interface FeeAnalyticsProps {
   walletAddress: string;
@@ -17,8 +18,98 @@ interface FeeAnalyticsProps {
 
 export default function FeeAnalytics({ walletAddress }: FeeAnalyticsProps) {
   const [timeframe, setTimeframe] = useState<string>('24h');
+  const [tokenMetadataMap, setTokenMetadataMap] = useState<Map<string, TokenMetadata>>(new Map());
+  const [loadingTokens, setLoadingTokens] = useState<Set<string>>(new Set());
+  
   const { data: feeData, isLoading: isLoadingFees, isError: isErrorFees } = useFeeCollections(walletAddress, timeframe);
   const { data: portfolioData, isLoading: isLoadingPortfolio } = usePortfolio(walletAddress);
+
+  // Extract unique token addresses from fee collection data
+  const uniqueTokenAddresses = useMemo(() => {
+    if (!feeData?.fee_collections) return [];
+    
+    const addresses = new Set<string>();
+    feeData.fee_collections.forEach(collection => {
+      if (collection.token_mint) {
+        addresses.add(collection.token_mint);
+      }
+    });
+    
+    return Array.from(addresses);
+  }, [feeData]);
+
+  // Fetch token metadata for all unique token addresses
+  useEffect(() => {
+    const fetchTokenMetadata = async () => {
+      if (uniqueTokenAddresses.length === 0) return;
+      
+      // Only fetch tokens we don't already have
+      const tokensToFetch = uniqueTokenAddresses.filter(
+        address => !tokenMetadataMap.has(address) && !loadingTokens.has(address)
+      );
+      
+      if (tokensToFetch.length === 0) return;
+      
+      // Mark tokens as loading
+      setLoadingTokens(prev => new Set([...prev, ...tokensToFetch]));
+      
+      try {
+        // Fetch metadata for each token
+        const metadataPromises = tokensToFetch.map(async (address) => {
+          try {
+            const metadata = await getTokenMetadata(address);
+            return { address, metadata };
+          } catch (error) {
+            console.warn(`Failed to fetch metadata for ${address}:`, error);
+            return { address, metadata: null };
+          }
+        });
+        
+        const results = await Promise.all(metadataPromises);
+        
+        // Update the metadata map
+        setTokenMetadataMap(prev => {
+          const newMap = new Map(prev);
+          results.forEach(({ address, metadata }) => {
+            if (metadata) {
+              newMap.set(address, metadata);
+            }
+          });
+          return newMap;
+        });
+        
+      } catch (error) {
+        console.error('Error fetching token metadata:', error);
+      } finally {
+        // Remove tokens from loading set
+        setLoadingTokens(prev => {
+          const newSet = new Set(prev);
+          tokensToFetch.forEach(address => newSet.delete(address));
+          return newSet;
+        });
+      }
+    };
+    
+    fetchTokenMetadata();
+  }, [uniqueTokenAddresses, tokenMetadataMap, loadingTokens]);
+
+  // Helper function to get token symbol
+  const getTokenSymbol = (tokenMint: string | undefined): string => {
+    if (!tokenMint) return 'Token';
+    
+    const metadata = tokenMetadataMap.get(tokenMint);
+    if (metadata) {
+      return metadata.symbol;
+    }
+    
+    // If we're still loading this token, show loading indicator
+    if (loadingTokens.has(tokenMint)) {
+      return '...';
+    }
+    
+    // Fallback to truncated address or 'Token'
+    return tokenMint.length > 6 ? tokenMint.slice(0, 6) : 'Token';
+  };
 
   // Format USD values
   const formatUsd = (value: number) => {
@@ -281,7 +372,6 @@ export default function FeeAnalytics({ walletAddress }: FeeAnalyticsProps) {
                       <TableRow>
                         <TableHead>Date</TableHead>
                         <TableHead>Position</TableHead>
-                        <TableHead>Token A</TableHead>
                         <TableHead>Token B</TableHead>
                         <TableHead className="text-right">USD Value</TableHead>
                         <TableHead>Transaction</TableHead>
@@ -298,15 +388,7 @@ export default function FeeAnalytics({ walletAddress }: FeeAnalyticsProps) {
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
-                              <span className="font-medium">{collection.token_a_symbol || 'SOL'}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {collection.native_transfer_net_sol ? `${collection.native_transfer_net_sol.toFixed(6)}` : '0'}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{collection.token_b_symbol || 'Token'}</span>
+                              <span className="font-medium">{getTokenSymbol(collection.token_mint)}</span>
                               <span className="text-xs text-muted-foreground">
                                 {collection.token_amount ? `${collection.token_amount.toFixed(6)}` : '0'}
                               </span>
