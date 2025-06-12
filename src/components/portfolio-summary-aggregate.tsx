@@ -8,7 +8,9 @@ import {
   BanknotesIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  ShareIcon
+  ShareIcon,
+  BuildingLibraryIcon,
+  LinkIcon
 } from "@heroicons/react/24/outline";
 
 interface PortfolioSummaryAggregateProps {
@@ -23,6 +25,8 @@ interface SummaryCardProps {
   gradient: string;
   bgGradient: string;
   trend?: number;
+  isClickable?: boolean;
+  onClick?: () => void;
 }
 
 export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggregateProps) {
@@ -30,6 +34,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   const hasHyperliquid = data.hyperliquid_summary && (data.summary.hyperliquid_value > 0);
   const hasEvm = data.evm_summary && data.evm_summary.total_value > 0;
   const hasSui = data.sui_summary && data.sui_summary.total_value > 0;
+  const hasCex = data.cex_summary && data.cex_summary.total_value > 0;
   
   // Calculate Solana value (excluding other chains)
   const solanaValue = data.summary.token_value + 
@@ -44,6 +49,11 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   // Hardcoded number of shares and calculate value per share
   const numberOfShares = 57888.67;
   const valuePerShare = data.summary.total_value / numberOfShares;
+
+  // Function to handle Hyperevm card click
+  const handleHyperevmClick = () => {
+    window.open('https://app.hyperbeat.org/hyperfolio/0xaA2A9901eC394dd8F69D8BF6ef4aE085246Dfe78', '_blank');
+  };
 
   // First line cards: Total Value, Shares Info, Uncollected Fees
   const firstLineCards: SummaryCardProps[] = [
@@ -119,6 +129,29 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
       bgGradient: "from-teal-500/10 to-cyan-500/10"
     });
   }
+
+  if (hasCex) {
+    secondLineCards.push({
+      title: "CEX Value",
+      value: formatDollarFixed(data.summary.cex_value),
+      description: `${data.cex_summary.wallet_count} Wallets`,
+      icon: BuildingLibraryIcon,
+      gradient: "from-emerald-500 to-green-500",
+      bgGradient: "from-emerald-500/10 to-green-500/10"
+    });
+  }
+
+  // Always add Hyperevm card
+  secondLineCards.push({
+    title: "Hyperevm",
+    value: formatDollarFixed(51719.40),
+    description: "Tap card to access portfolio",
+    icon: LinkIcon,
+    gradient: "from-violet-500 to-purple-500",
+    bgGradient: "from-violet-500/10 to-purple-500/10",
+    isClickable: true,
+    onClick: handleHyperevmClick
+  });
   
   return (
     <div className="space-y-6">
@@ -151,13 +184,17 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   );
 }
 
-function SummaryCard({ title, value, description, icon: Icon, gradient, bgGradient, trend }: SummaryCardProps) {
+function SummaryCard({ title, value, description, icon: Icon, gradient, bgGradient, trend, isClickable, onClick }: SummaryCardProps) {
   const trendColor = trend ? (trend > 0 ? 'text-green-500' : 'text-red-500') : '';
   const trendPrefix = trend && trend > 0 ? '+' : '';
   const TrendIcon = trend ? (trend > 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon) : null;
   
-  return (
-    <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+  const cardClasses = `group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${
+    isClickable ? 'cursor-pointer hover:scale-105' : ''
+  }`;
+  
+  const cardContent = (
+    <>
       {/* Background gradient */}
       <div className={`absolute inset-0 bg-gradient-to-br ${bgGradient} opacity-50 group-hover:opacity-70 transition-opacity duration-300`} />
       
@@ -188,6 +225,20 @@ function SummaryCard({ title, value, description, icon: Icon, gradient, bgGradie
         </div>
       </CardContent>
       </div>
+    </>
+  );
+  
+  if (isClickable) {
+    return (
+      <Card className={cardClasses} onClick={onClick}>
+        {cardContent}
+      </Card>
+    );
+  }
+  
+  return (
+    <Card className={cardClasses}>
+      {cardContent}
     </Card>
   );
 } 

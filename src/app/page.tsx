@@ -7,6 +7,7 @@ import WalletList from '@/components/wallet-list';
 import TopTokensTable from '@/components/top-tokens-table';
 import ExposureTable from '@/components/exposure-table';
 import LendingTable from '@/components/lending-table';
+import CexTable from '@/components/cex-table';
 import PortfolioSummaryAggregate from '@/components/portfolio-summary-aggregate';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -62,7 +63,7 @@ export default function HomePage() {
         {/* Main Content Tabs */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-200">
           <Tabs value={activeSection} onValueChange={setActiveSection} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 p-1 bg-muted/50 backdrop-blur-sm">
+            <TabsList className="grid w-full grid-cols-5 p-1 bg-muted/50 backdrop-blur-sm">
               <TabsTrigger value="wallets" className="text-sm font-medium">
                 💼 Wallets
               </TabsTrigger>
@@ -72,8 +73,11 @@ export default function HomePage() {
               <TabsTrigger value="exposure" className="text-sm font-medium">
                 📊 Exposure
               </TabsTrigger>
+              <TabsTrigger value="cex" className="text-sm font-medium">
+                🏦 CEX
+              </TabsTrigger>
               <TabsTrigger value="lending" className="text-sm font-medium">
-                🏦 Lending
+                💳 Lending
               </TabsTrigger>
             </TabsList>
             
@@ -116,6 +120,22 @@ export default function HomePage() {
                   {exposureData && (
                     <ExposureTable 
                       exposures={exposureData} 
+                    />
+                  )}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="cex">
+              {isLoadingSummary ? (
+                <div className="animate-pulse">
+                  <Skeleton className="h-64 rounded-lg" />
+                </div>
+              ) : (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  {summaryData?.cex_summary && (
+                    <CexTable 
+                      data={summaryData.cex_summary} 
                     />
                   )}
                 </div>

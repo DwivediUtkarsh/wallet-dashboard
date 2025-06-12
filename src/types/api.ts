@@ -239,6 +239,19 @@ export interface HyperliquidSummary {
   high_risk_count: number;
 }
 
+// CEX related interfaces
+export interface CexWallet {
+  wallet_name: string;
+  net_total_value: number;
+  last_updated: string;
+}
+
+export interface CexSummary {
+  wallets: CexWallet[];
+  total_value: number;
+  wallet_count: number;
+}
+
 export interface PortfolioSummary {
   token_value: number;
   whirlpool_value: number;
@@ -256,6 +269,8 @@ export interface PortfolioSummary {
   sui_bluefin_value?: number;
   sui_bluefin_fees?: number;
   sui_suilend_value?: number;
+  sui_total_value?: number;
+  cex_value: number;
   total_value: number;
 }
 
@@ -269,6 +284,7 @@ export interface PortfolioSummaryData {
   hyperliquid_summary: HyperliquidSummary;
   evm_summary?: EvmSummary;
   sui_summary?: SuiSummary;
+  cex_summary: CexSummary;
   summary: PortfolioSummary;
 }
 
