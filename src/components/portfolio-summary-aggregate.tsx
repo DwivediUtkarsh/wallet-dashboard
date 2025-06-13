@@ -144,7 +144,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   // Always add Hyperevm card
   secondLineCards.push({
     title: "Hyperevm",
-    value: formatDollarFixed(51719.40),
+    value: formatDollarFixed(48600),
     description: "Tap card to access portfolio",
     icon: LinkIcon,
     gradient: "from-violet-500 to-purple-500",
