@@ -12,6 +12,7 @@ import {
   BuildingLibraryIcon,
   LinkIcon
 } from "@heroicons/react/24/outline";
+import type { ElementType } from "react";
 
 interface PortfolioSummaryAggregateProps {
   data: PortfolioSummaryData;
@@ -21,12 +22,13 @@ interface SummaryCardProps {
   title: string;
   value: string;
   description: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ElementType;
   gradient: string;
   bgGradient: string;
   trend?: number;
   isClickable?: boolean;
   onClick?: () => void;
+  span?: number;
 }
 
 export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggregateProps) {
@@ -48,7 +50,9 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
 
   // Hardcoded number of shares and calculate value per share
   const numberOfShares = 57888.67;
-  const valuePerShare = data.summary.total_value / numberOfShares;
+  const hyperevmValue = 52043.23;
+  const totalValueIncludingHyperevm = data.summary.total_value + hyperevmValue;
+  const valuePerShare = totalValueIncludingHyperevm / numberOfShares;
 
   // Function to handle Hyperevm card click
   const handleHyperevmClick = () => {
@@ -63,7 +67,8 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
       description: `${data.wallet_count} Wallets`,
       icon: WalletIcon,
       gradient: "from-blue-500 to-cyan-500",
-      bgGradient: "from-blue-500/10 to-cyan-500/10"
+      bgGradient: "from-blue-500/10 to-cyan-500/10",
+      span: 2,
     },
     {
       title: "Shares Info",
@@ -144,7 +149,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   // Always add Hyperevm card
   secondLineCards.push({
     title: "Hyperevm",
-    value: formatDollarFixed(48600),
+    value: formatDollarFixed(hyperevmValue),
     description: "Tap card to access portfolio",
     icon: LinkIcon,
     gradient: "from-violet-500 to-purple-500",
@@ -184,19 +189,20 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   );
 }
 
-function SummaryCard({ title, value, description, icon: Icon, gradient, bgGradient, trend, isClickable, onClick }: SummaryCardProps) {
+function SummaryCard({ title, value, description, icon: Icon, gradient, bgGradient, trend, isClickable, onClick, span }: SummaryCardProps) {
+  const colSpanClass = span === 2 ? "lg:col-span-2" : span === 3 ? "lg:col-span-3" : "";
   const trendColor = trend ? (trend > 0 ? 'text-green-500' : 'text-red-500') : '';
   const trendPrefix = trend && trend > 0 ? '+' : '';
   const TrendIcon = trend ? (trend > 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon) : null;
   
   const cardClasses = `group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${
     isClickable ? 'cursor-pointer hover:scale-105' : ''
-  }`;
+  } ${colSpanClass}`;
   
   const cardContent = (
     <>
       {/* Background gradient */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${bgGradient} opacity-50 group-hover:opacity-70 transition-opacity duration-300`} />
+      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${bgGradient} opacity-10 group-hover:opacity-20 transition-opacity duration-300`} />
       
       {/* Content */}
       <div className="relative">

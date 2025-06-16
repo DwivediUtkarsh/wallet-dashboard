@@ -1,6 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDollar } from "@/lib/utils";
 import { PortfolioSummary } from "@/types/api";
+import {
+  BanknotesIcon,
+  CurrencyDollarIcon,
+  ChartBarIcon,
+  BoltIcon,
+  CubeTransparentIcon,
+  SparklesIcon,
+  ArrowPathIcon,
+  FireIcon,
+} from "@heroicons/react/24/outline";
+import type { ElementType } from "react";
 
 interface PortfolioSummaryProps {
   summary: PortfolioSummary;
@@ -36,7 +47,13 @@ export default function PortfolioSummaryComponent({
       <SummaryCard 
         title="Total Value" 
         value={formatDollar(summary.total_value)} 
-        description={isAggregate && walletCount ? `${walletCount} Wallets` : "Portfolio Value"}
+        description={
+          isAggregate && walletCount ? `${walletCount} Wallets` : "Portfolio Value"
+        }
+        icon={BanknotesIcon}
+        gradientFrom="from-blue-500/20"
+        gradientTo="to-purple-500/20"
+        span={2}
       />
 
       {/* Token Value - always shown */}
@@ -44,6 +61,9 @@ export default function PortfolioSummaryComponent({
         title="Token Value" 
         value={formatDollar(summary.token_value)}
         description="Combined Token Balances"
+        icon={CurrencyDollarIcon}
+        gradientFrom="from-emerald-400/20"
+        gradientTo="to-green-600/20"
       />
 
       {/* LP Position Value - only for Solana wallets or aggregate view */}
@@ -52,6 +72,9 @@ export default function PortfolioSummaryComponent({
           title="LP Position Value" 
           value={formatDollar(lpPositionValue)} 
           description="Whirlpool & Raydium"
+          icon={ChartBarIcon}
+          gradientFrom="from-indigo-400/20"
+          gradientTo="to-sky-500/20"
         />
       )}
 
@@ -62,10 +85,17 @@ export default function PortfolioSummaryComponent({
           value={formatDollar(summary.hyperliquid_value)} 
           description={
             summary.hyperliquid_staking_value > 0 
-              ? `Trading: $${(summary.hyperliquid_value - summary.hyperliquid_staking_value).toLocaleString()} | Staked: $${summary.hyperliquid_staking_value.toLocaleString()}`
-              : hyperliquidPnl >= 0 ? `PnL: +$${hyperliquidPnl.toLocaleString()}` : `PnL: -$${Math.abs(hyperliquidPnl).toLocaleString()}`
+              ? `Trading: $${(
+                  summary.hyperliquid_value - summary.hyperliquid_staking_value
+                ).toLocaleString()} | Staked: $${summary.hyperliquid_staking_value.toLocaleString()}`
+              : hyperliquidPnl >= 0
+              ? `PnL: +$${hyperliquidPnl.toLocaleString()}`
+              : `PnL: -$${Math.abs(hyperliquidPnl).toLocaleString()}`
           }
           trend={hyperliquidPnl > 0 ? 1 : hyperliquidPnl < 0 ? -1 : 0}
+          icon={BoltIcon}
+          gradientFrom="from-orange-400/20"
+          gradientTo="to-red-500/20"
         />
       )}
 
@@ -75,6 +105,9 @@ export default function PortfolioSummaryComponent({
           title="EVM Value" 
           value={formatDollar(summary.evm_value)} 
           description="EVM Chain Assets"
+          icon={CubeTransparentIcon}
+          gradientFrom="from-blue-500/20"
+          gradientTo="to-indigo-600/20"
       />
       )}
 
@@ -84,10 +117,13 @@ export default function PortfolioSummaryComponent({
           title="Sui Value" 
           value={formatDollar(totalSuiValue)} 
           description={
-            chain === 'sui' && summary.sui_bluefin_fees && summary.sui_bluefin_fees > 0
+            chain === "sui" && summary.sui_bluefin_fees && summary.sui_bluefin_fees > 0
               ? `Fees: ${formatDollar(summary.sui_bluefin_fees)}`
               : "Sui Chain Assets"
           }
+          icon={SparklesIcon}
+          gradientFrom="from-cyan-400/20"
+          gradientTo="to-teal-500/20"
       />
       )}
 
@@ -97,6 +133,9 @@ export default function PortfolioSummaryComponent({
           title="Lending Value" 
           value={formatDollar(summary.marginfi_value + summary.kamino_value)} 
           description="Marginfi & Kamino"
+          icon={ArrowPathIcon}
+          gradientFrom="from-yellow-300/20"
+          gradientTo="to-amber-400/20"
         />
       )}
 
@@ -106,10 +145,15 @@ export default function PortfolioSummaryComponent({
           title="Uncollected Fees" 
           value={formatDollar(summary.total_fees + (summary.sui_bluefin_fees || 0))} 
           description={
-            chain === 'sui' ? "Bluefin Fees" : 
-            chain === 'solana' ? "Whirlpool & Raydium" :
-            "All Protocols"
+            chain === "sui"
+              ? "Bluefin Fees"
+              : chain === "solana"
+              ? "Whirlpool & Raydium"
+              : "All Protocols"
           }
+          icon={FireIcon}
+          gradientFrom="from-rose-400/20"
+          gradientTo="to-pink-500/20"
         />
       )}
     </div>
@@ -121,24 +165,49 @@ interface SummaryCardProps {
   value: string;
   description?: string;
   trend?: number; // 1 for positive, -1 for negative, 0 for neutral
+  icon: ElementType;
+  gradientFrom: string;
+  gradientTo: string;
+  span?: number; // optional column span on large screens
 }
 
-function SummaryCard({ title, value, description, trend }: SummaryCardProps) {
+function SummaryCard({
+  title,
+  value,
+  description,
+  trend,
+  icon: Icon,
+  gradientFrom,
+  gradientTo,
+  span,
+}: SummaryCardProps) {
+  const colSpanClass = span === 2 ? "lg:col-span-2" : span === 3 ? "lg:col-span-3" : "";
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-gray-600">
+    <Card
+      className={`relative overflow-hidden ${colSpanClass}`}
+    >
+      {/* subtle gradient backdrop */}
+      <div
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradientFrom} ${gradientTo} opacity-10`}
+      />
+      <CardHeader className="relative pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+          <Icon className="h-4 w-4" aria-hidden="true" />
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="relative">
         <div className="text-2xl font-bold mb-1">{value}</div>
         {description && (
-          <p className={`text-xs ${
-            trend === 1 ? 'text-green-600' : 
-            trend === -1 ? 'text-red-600' : 
-            'text-gray-500'
-          }`}>
+          <p
+            className={`text-xs ${
+              trend === 1
+                ? "text-green-600"
+                : trend === -1
+                ? "text-red-600"
+                : "text-gray-500"
+            }`}
+          >
             {description}
             </p>
           )}
