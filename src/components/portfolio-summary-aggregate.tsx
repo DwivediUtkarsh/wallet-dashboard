@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { formatPercent, formatDollarFixed } from "@/lib/utils";
 import { PortfolioSummaryData } from "@/types/api";
 import { 
@@ -10,9 +11,11 @@ import {
   ArrowTrendingDownIcon,
   ShareIcon,
   BuildingLibraryIcon,
-  LinkIcon
+  LinkIcon,
+  PresentationChartLineIcon
 } from "@heroicons/react/24/outline";
 import type { ElementType } from "react";
+import Link from "next/link";
 
 interface PortfolioSummaryAggregateProps {
   data: PortfolioSummaryData;
@@ -50,7 +53,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
 
   // Hardcoded number of shares and calculate value per share
   const numberOfShares = 57888.67;
-  const hyperevmValue = 52043.23;
+  const hyperevmValue = 51265.78;
   const totalValueIncludingHyperevm = data.summary.total_value + hyperevmValue;
   const valuePerShare = totalValueIncludingHyperevm / numberOfShares;
 
@@ -160,6 +163,19 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   
   return (
     <div className="space-y-6">
+      {/* Analytics Button */}
+      <div className="flex justify-center">
+        <Link href="/analytics">
+          <Button 
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-3"
+            size="lg"
+          >
+            <PresentationChartLineIcon className="h-5 w-5 mr-2" />
+            Open Analytics Dashboard
+          </Button>
+        </Link>
+      </div>
+
       {/* First line: Total Value, Shares Info, Uncollected Fees */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {firstLineCards.map((card, index) => (

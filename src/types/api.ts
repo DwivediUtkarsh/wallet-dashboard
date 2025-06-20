@@ -484,4 +484,51 @@ export interface LendingSummaryData {
   summary: LendingSummary;
   positions: LendingAccount[];
   last_updated: string;
+}
+
+// Analytics-specific interfaces
+export interface FeeGrowthPoint {
+  timestamp: string;
+  fee_growth?: number;
+  current_fees?: {
+    total?: number;
+    whirlpool?: number;
+    raydium?: number;
+  } | number;
+}
+
+export interface FeeGrowthData {
+  growth_data: FeeGrowthPoint[];
+  overall_hourly_rate: number;
+}
+
+export interface HistoricalPortfolioPoint {
+  snapshot_time: string;
+  total_portfolio_value?: number;
+}
+
+// Chart data interfaces used in analytics
+export interface ChartDataPoint {
+  timestamp: string;
+  date: string;
+  value: number;
+  fees?: number;
+}
+
+export interface AnalyticsKeyMetrics {
+  expectedDailyFees: number;
+  last24hFees: number;
+  totalPortfolio: number;
+  uncollectedFees: number;
+}
+
+export interface AnalyticsData {
+  totalPortfolioHistory: ChartDataPoint[];
+  feeHistory: ChartDataPoint[];
+  solanaHistory: ChartDataPoint[];
+  hyperliquidHistory: ChartDataPoint[];
+  evmHistory: ChartDataPoint[];
+  suiHistory: ChartDataPoint[];
+  cexHistory: ChartDataPoint[];
+  keyMetrics: AnalyticsKeyMetrics;
 } 

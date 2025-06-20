@@ -1,6 +1,6 @@
 // API client for connecting to the portfolio tracking backend
 
-import { PortfolioData, WalletInfo, PortfolioSummaryData, TopTokenData, TokenExposureData, LendingSummaryData } from '@/types/api';
+import { PortfolioData, WalletInfo, PortfolioSummaryData, TopTokenData, TokenExposureData, LendingSummaryData, FeeGrowthData, HistoricalPortfolioPoint } from '@/types/api';
 
 // Use proxy route for production, direct API for development
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -218,4 +218,25 @@ export async function getExposure(limit = 20): Promise<TokenExposureData[]> {
  */
 export async function getLendingSummary(): Promise<LendingSummaryData> {
   return fetchWithErrorHandling<LendingSummaryData>('/lending-summary');
+} 
+
+/**
+ * Get fee growth data for a wallet
+ */
+export async function getFeeGrowthData(walletAddress: string, timeframe = '7d'): Promise<FeeGrowthData> {
+  return fetchWithErrorHandling<FeeGrowthData>(`/fee-growth/${walletAddress}?timeframe=${timeframe}`);
+}
+
+/**
+ * Get historical portfolio data for a wallet
+ */
+export async function getHistoricalData(walletAddress: string, timeframe = '7d'): Promise<HistoricalPortfolioPoint[]> {
+  return fetchWithErrorHandling<HistoricalPortfolioPoint[]>(`/history/${walletAddress}?timeframe=${timeframe}`);
+}
+
+/**
+ * Get fee collection events for a wallet
+ */
+export async function getFeeCollections(walletAddress: string, timeframe = '30d') {
+  return fetchWithErrorHandling(`/fee-collections/${walletAddress}?timeframe=${timeframe}`);
 } 
