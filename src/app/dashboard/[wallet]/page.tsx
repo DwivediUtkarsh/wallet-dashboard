@@ -213,6 +213,7 @@ export default function DashboardPage() {
                   account={data.hyperliquid_account} 
                   positions={data.hyperliquid_positions || []} 
                   staking={data.hyperliquid_staking}
+                  spotHoldings={data.hyperliquid_spot_holdings || []}
                 />
               </TabsContent>
               

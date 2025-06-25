@@ -1,17 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDollar, formatNumber, formatPercent } from "@/lib/utils";
-import { HyperliquidAccount, HyperliquidPosition, HyperliquidStaking, HyperliquidStakingDelegation } from "@/types/api";
+import { HyperliquidAccount, HyperliquidPosition, HyperliquidStaking, HyperliquidStakingDelegation, HyperliquidSpotHolding } from "@/types/api";
 import { Badge } from "@/components/ui/badge";
 
 interface HyperliquidTableProps {
   account: HyperliquidAccount | null;
   positions: HyperliquidPosition[];
   staking?: HyperliquidStaking | null;
+  spotHoldings?: HyperliquidSpotHolding[];
 }
 
-export default function HyperliquidTable({ account, positions, staking }: HyperliquidTableProps) {
-  if (!account && (!positions || positions.length === 0) && !staking) {
+export default function HyperliquidTable({ account, positions, staking, spotHoldings }: HyperliquidTableProps) {
+  if (!account && (!positions || positions.length === 0) && !staking && (!spotHoldings || spotHoldings.length === 0)) {
     return (
       <Card>
         <CardHeader>
@@ -59,6 +60,48 @@ export default function HyperliquidTable({ account, positions, staking }: Hyperl
                 valueClass={account.funding_paid_24h <= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}
               />
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {spotHoldings && spotHoldings.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Spot Holdings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Asset</TableHead>
+                  <TableHead className="text-right">Balance</TableHead>
+                  <TableHead className="text-right">Current Price</TableHead>
+                  <TableHead className="text-right">USD Value</TableHead>
+                  <TableHead>Price Source</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {spotHoldings.map((holding, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{holding.coin}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatNumber(holding.balance)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatDollar(holding.current_price)}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {formatDollar(holding.usd_value)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {holding.price_source}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}

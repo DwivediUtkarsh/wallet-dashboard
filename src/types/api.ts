@@ -44,7 +44,7 @@ export interface TokenExposureSource {
               'kamino_supply' | 'kamino_borrow' |
               'evm_liquidity' | 'evm_lending_supply' | 'evm_lending_borrow' | 'evm_staking' |
               'sui_bluefin_a' | 'sui_bluefin_b' | 'sui_lend_deposit' | 'sui_lend_borrow' |
-              'hyperliquid_staking';
+              'hyperliquid_staking' | 'hyperliquid_spot';
   amount: number;
   value_usd: number;
   avg_price_usd: number;
@@ -229,6 +229,19 @@ export interface HyperliquidStaking {
   updated_at: string;
 }
 
+export interface HyperliquidSpotHolding {
+  coin: string;
+  token_id: number;
+  balance: number;
+  hold_amount: number;
+  available_balance: number;
+  usd_value: number;
+  entry_notional: number;
+  current_price: number;
+  price_source: string;
+  updated_at: string;
+}
+
 export interface HyperliquidSummary {
   total_equity: number;
   perps_equity: number;
@@ -264,6 +277,7 @@ export interface PortfolioSummary {
   hyperliquid_value: number;
   hyperliquid_pnl: number;
   hyperliquid_staking_value: number;
+  hyperliquid_spot_value: number;
   evm_value?: number;
   sui_token_value?: number;
   sui_bluefin_value?: number;
@@ -300,6 +314,7 @@ export interface PortfolioData {
   hyperliquid_positions: HyperliquidPosition[];
   hyperliquid_chart: HyperliquidChartPoint[];
   hyperliquid_staking: HyperliquidStaking | null;
+  hyperliquid_spot_holdings: HyperliquidSpotHolding[];
   evm_data?: EvmPortfolioData;
   sui_data?: SuiPortfolioData;
   summary: PortfolioSummary;
@@ -484,51 +499,4 @@ export interface LendingSummaryData {
   summary: LendingSummary;
   positions: LendingAccount[];
   last_updated: string;
-}
-
-// Analytics-specific interfaces
-export interface FeeGrowthPoint {
-  timestamp: string;
-  fee_growth?: number;
-  current_fees?: {
-    total?: number;
-    whirlpool?: number;
-    raydium?: number;
-  } | number;
-}
-
-export interface FeeGrowthData {
-  growth_data: FeeGrowthPoint[];
-  overall_hourly_rate: number;
-}
-
-export interface HistoricalPortfolioPoint {
-  snapshot_time: string;
-  total_portfolio_value?: number;
-}
-
-// Chart data interfaces used in analytics
-export interface ChartDataPoint {
-  timestamp: string;
-  date: string;
-  value: number;
-  fees?: number;
-}
-
-export interface AnalyticsKeyMetrics {
-  expectedDailyFees: number;
-  last24hFees: number;
-  totalPortfolio: number;
-  uncollectedFees: number;
-}
-
-export interface AnalyticsData {
-  totalPortfolioHistory: ChartDataPoint[];
-  feeHistory: ChartDataPoint[];
-  solanaHistory: ChartDataPoint[];
-  hyperliquidHistory: ChartDataPoint[];
-  evmHistory: ChartDataPoint[];
-  suiHistory: ChartDataPoint[];
-  cexHistory: ChartDataPoint[];
-  keyMetrics: AnalyticsKeyMetrics;
 } 

@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatPercent, formatDollarFixed } from "@/lib/utils";
 import { PortfolioSummaryData } from "@/types/api";
+import { useTargetTokenHoldings } from "@/hooks/use-portfolio";
 import { 
   ChartBarIcon, 
   WalletIcon, 
@@ -12,7 +13,8 @@ import {
   ShareIcon,
   BuildingLibraryIcon,
   LinkIcon,
-  PresentationChartLineIcon
+  PresentationChartLineIcon,
+  CubeIcon
 } from "@heroicons/react/24/outline";
 import type { ElementType } from "react";
 import Link from "next/link";
@@ -32,9 +34,13 @@ interface SummaryCardProps {
   isClickable?: boolean;
   onClick?: () => void;
   span?: number;
+  customContent?: React.ReactNode;
 }
 
 export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggregateProps) {
+  // Use the new hook to get target token holdings
+  const { data: targetTokens, isLoading: isLoadingTargetTokens } = useTargetTokenHoldings();
+
   // Check if we have any value for different chains
   const hasHyperliquid = data.hyperliquid_summary && (data.summary.hyperliquid_value > 0);
   const hasEvm = data.evm_summary && data.evm_summary.total_value > 0;
@@ -53,7 +59,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
 
   // Hardcoded number of shares and calculate value per share
   const numberOfShares = 57888.67;
-  const hyperevmValue = 51265.78;
+  const hyperevmValue = 31266.18;
   const totalValueIncludingHyperevm = data.summary.total_value + hyperevmValue;
   const valuePerShare = totalValueIncludingHyperevm / numberOfShares;
 
@@ -62,29 +68,107 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     window.open('https://app.hyperbeat.org/hyperfolio/0xaA2A9901eC394dd8F69D8BF6ef4aE085246Dfe78', '_blank');
   };
 
-  // First line cards: Total Value, Shares Info, Uncollected Fees
+  // Custom content for Shares Info widget (inverted font sizes)
+  const sharesInfoContent = (
+    <div className="space-y-2">
+      <div className="text-3xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+        ${valuePerShare.toFixed(4)}
+      </div>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground leading-tight">
+          {numberOfShares.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} shares
+        </p>
+      </div>
+    </div>
+  );
+
+  // Custom content for Token Holdings widget
+  const tokenHoldingsContent = isLoadingTargetTokens ? (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        {[1, 2, 3, 4].slice(0, 3).map(i => (
+          <div key={i} className="animate-pulse text-center">
+            <div className="h-6 bg-muted rounded mb-1"></div>
+            <div className="h-3 bg-muted rounded"></div>
+          </div>
+        ))}
+      </div>
+      <div className="text-xs text-muted-foreground text-center">Loading...</div>
+    </div>
+  ) : (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        {/* BTC Row */}
+        <div className="col-span-2 text-center">
+          <div className="text-lg font-bold bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent">
+            ${targetTokens?.btc_value_usd?.toLocaleString('en-US', { 
+              minimumFractionDigits: 0, 
+              maximumFractionDigits: 0 
+            }) || '$0'}
+          </div>
+          <div className="text-xs text-muted-foreground">BTC on BASE AAVE3</div>
+        </div>
+        
+        {/* JitoSOL and HYPE Row */}
+        <div className="text-center">
+          <div className="text-lg font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+            ${targetTokens?.jitosol_value_usd?.toLocaleString('en-US', { 
+              minimumFractionDigits: 0, 
+              maximumFractionDigits: 0 
+            }) || '$0'}
+          </div>
+          <div className="text-xs text-muted-foreground">JitoSOL</div>
+          <div className="text-xs text-muted-foreground opacity-75">Marginfi</div>
+        </div>
+        <div className="text-center">
+          <div className="text-lg font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
+            ${targetTokens?.hype_value_usd?.toLocaleString('en-US', { 
+              minimumFractionDigits: 0, 
+              maximumFractionDigits: 0 
+            }) || '$0'}
+          </div>
+          <div className="text-xs text-muted-foreground">HYPE</div>
+          <div className="text-xs text-muted-foreground opacity-75">Staked + Spot</div>
+        </div>
+      </div>
+      <div className="text-xs text-muted-foreground text-center">
+        Target holdings tracked
+      </div>
+    </div>
+  );
+
+  // First line cards: Total Value, Shares Info, Token Holdings, Uncollected Fees
   const firstLineCards: SummaryCardProps[] = [
     {
       title: "Total Value",
-      value: formatDollarFixed(data.summary.total_value),
-      description: `${data.wallet_count} Wallets`,
+      value: formatDollarFixed(data.summary.total_value + hyperevmValue),
+      description: "Complete portfolio value",
       icon: WalletIcon,
       gradient: "from-blue-500 to-cyan-500",
       bgGradient: "from-blue-500/10 to-cyan-500/10",
-      span: 2,
     },
     {
       title: "Shares Info",
-      value: numberOfShares.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-      description: `$${valuePerShare.toFixed(4)} per share`,
+      value: "", // Will use custom content
+      description: "",
       icon: ShareIcon,
       gradient: "from-amber-500 to-orange-500",
-      bgGradient: "from-amber-500/10 to-orange-500/10"
+      bgGradient: "from-amber-500/10 to-orange-500/10",
+      customContent: sharesInfoContent
+    },
+    {
+      title: "Token Holdings",
+      value: "", // Will use custom content
+      description: "",
+      icon: CubeIcon,
+      gradient: "from-indigo-500 to-purple-500",
+      bgGradient: "from-indigo-500/10 to-purple-500/10",
+      customContent: tokenHoldingsContent
     },
     {
       title: "Uncollected Fees",
       value: formatDollarFixed(totalFees),
-      description: hasSui ? "All protocols" : "LP positions",
+      description: "Pending fee rewards",
       icon: BanknotesIcon,
       gradient: "from-green-500 to-emerald-500",
       bgGradient: "from-green-500/10 to-emerald-500/10"
@@ -96,7 +180,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     {
       title: "Solana Value",
       value: formatDollarFixed(solanaValue),
-      description: `${data.token_balances.length} Tokens`,
+      description: "Solana ecosystem value",
       icon: ChartBarIcon,
       gradient: "from-purple-500 to-pink-500",
       bgGradient: "from-purple-500/10 to-pink-500/10"
@@ -108,7 +192,16 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     secondLineCards.push({
       title: "Hyperliquid Value",
       value: formatDollarFixed(data.summary.hyperliquid_value),
-      description: `${data.hyperliquid_summary.account_count} Accounts${data.summary.hyperliquid_staking_value > 0 ? ` • $${data.summary.hyperliquid_staking_value.toLocaleString()} Staked` : ''}`,
+      description: (() => {
+        const parts = [`${data.hyperliquid_summary.account_count} Accounts`];
+        if (data.summary.hyperliquid_spot_value > 0) {
+          parts.push(`$${data.summary.hyperliquid_spot_value.toLocaleString()} Spot`);
+        }
+        if (data.summary.hyperliquid_staking_value > 0) {
+          parts.push(`$${data.summary.hyperliquid_staking_value.toLocaleString()} Staked`);
+        }
+        return parts.join(' • ');
+      })(),
       icon: ArrowTrendingUpIcon,
       gradient: "from-orange-500 to-red-500",
       bgGradient: "from-orange-500/10 to-red-500/10",
@@ -120,7 +213,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     secondLineCards.push({
       title: "EVM Value",
       value: formatDollarFixed(data.evm_summary.total_value),
-      description: `${data.evm_summary.chain_count} Chains`,
+      description: "Multi-chain EVM assets",
       icon: CurrencyDollarIcon,
       gradient: "from-indigo-500 to-blue-500",
       bgGradient: "from-indigo-500/10 to-blue-500/10"
@@ -131,7 +224,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     secondLineCards.push({
       title: "Sui Value",
       value: formatDollarFixed(data.sui_summary.total_value),
-      description: `${data.sui_summary.wallet_count} Wallets`,
+      description: "Sui ecosystem positions",
       icon: ArrowTrendingUpIcon,
       gradient: "from-teal-500 to-cyan-500",
       bgGradient: "from-teal-500/10 to-cyan-500/10"
@@ -176,12 +269,12 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
         </Link>
       </div>
 
-      {/* First line: Total Value, Shares Info, Uncollected Fees */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* First line: Total Value, Shares Info, Token Holdings, Uncollected Fees */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {firstLineCards.map((card, index) => (
           <div
             key={card.title}
-            className="animate-in fade-in zoom-in duration-500"
+            className={`animate-in fade-in zoom-in duration-500 ${card.span === 2 ? 'md:col-span-2' : ''}`}
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <SummaryCard {...card} />
@@ -195,7 +288,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
           <div
             key={card.title}
             className="animate-in fade-in zoom-in duration-500"
-            style={{ animationDelay: `${(index + 3) * 100}ms` }}
+            style={{ animationDelay: `${(index + 4) * 100}ms` }}
           >
             <SummaryCard {...card} />
           </div>
@@ -205,13 +298,13 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   );
 }
 
-function SummaryCard({ title, value, description, icon: Icon, gradient, bgGradient, trend, isClickable, onClick, span }: SummaryCardProps) {
+function SummaryCard({ title, value, description, icon: Icon, gradient, bgGradient, trend, isClickable, onClick, span, customContent }: SummaryCardProps) {
   const colSpanClass = span === 2 ? "lg:col-span-2" : span === 3 ? "lg:col-span-3" : "";
   const trendColor = trend ? (trend > 0 ? 'text-green-500' : 'text-red-500') : '';
   const trendPrefix = trend && trend > 0 ? '+' : '';
   const TrendIcon = trend ? (trend > 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon) : null;
   
-  const cardClasses = `group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${
+  const cardClasses = `group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full min-h-[140px] flex flex-col ${
     isClickable ? 'cursor-pointer hover:scale-105' : ''
   } ${colSpanClass}`;
   
@@ -221,31 +314,37 @@ function SummaryCard({ title, value, description, icon: Icon, gradient, bgGradie
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${bgGradient} opacity-10 group-hover:opacity-20 transition-opacity duration-300`} />
       
       {/* Content */}
-      <div className="relative">
-      <CardHeader className="pb-2">
+      <div className="relative flex flex-col h-full">
+      <CardHeader className="pb-2 flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-            <div className={`p-2 rounded-lg bg-gradient-to-r ${gradient} text-white shadow-lg`}>
+            <div className={`p-2 rounded-lg bg-gradient-to-r ${gradient} text-white shadow-lg flex-shrink-0`}>
               <Icon className="h-4 w-4" />
             </div>
           </div>
       </CardHeader>
-        <CardContent className="space-y-2">
-          <div className={`text-2xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
-            {value}
-          </div>
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground leading-tight">{description}</p>
-            {trend !== undefined && TrendIcon && (
-              <div className={`flex items-center gap-1 ${trendColor}`}>
-                <TrendIcon className="h-3 w-3" />
-                <span className="text-xs font-medium">
-                  {trendPrefix}{formatPercent(Math.abs(trend))}
-                </span>
+        <CardContent className="space-y-2 flex-grow flex flex-col justify-center">
+          {customContent ? (
+            customContent
+          ) : (
+            <>
+              <div className={`text-2xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+                {value}
               </div>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground leading-tight">{description}</p>
+                {trend !== undefined && TrendIcon && (
+                  <div className={`flex items-center gap-1 ${trendColor}`}>
+                    <TrendIcon className="h-3 w-3" />
+                    <span className="text-xs font-medium">
+                      {trendPrefix}{formatPercent(Math.abs(trend))}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </>
           )}
-        </div>
-      </CardContent>
+        </CardContent>
       </div>
     </>
   );

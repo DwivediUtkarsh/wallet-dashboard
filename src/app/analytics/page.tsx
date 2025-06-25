@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { usePortfolioSummary } from '@/hooks/use-portfolio';
-import { getWallets, getFeeGrowthData, getHistoricalData } from '@/lib/api-client';
-import type { PortfolioSummary, ChartDataPoint, AnalyticsData, FeeGrowthPoint, HistoricalPortfolioPoint } from '@/types/api';
+import { getHistoricalData, getFeeGrowthData } from '@/lib/api-client';
+import type { PortfolioSummary } from '@/types/api';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -36,6 +36,57 @@ ChartJS.register(
   Filler
 );
 
+interface ChartDataPoint {
+  timestamp: string;
+  date: string;
+  value: number;
+  fees?: number;
+}
+
+interface FeeGrowthPoint {
+  timestamp: string;
+  fee_growth?: {
+    total?: number;
+  } | number;
+  current_fees?: {
+    total?: number;
+    whirlpool?: number;
+    raydium?: number;
+  } | number;
+}
+
+interface FeeGrowthData {
+  growth_data: FeeGrowthPoint[];
+  overall_hourly_rate: number;
+}
+
+interface HistoricalDataPoint {
+  snapshot_time: string;
+  total_portfolio_value?: string | number;
+}
+
+interface WalletInfo {
+  address: string;
+  label?: string;
+  total_value_usd?: number;
+}
+
+interface AnalyticsData {
+  totalPortfolioHistory: ChartDataPoint[];
+  feeHistory: ChartDataPoint[];
+  solanaHistory: ChartDataPoint[];
+  hyperliquidHistory: ChartDataPoint[];
+  evmHistory: ChartDataPoint[];
+  suiHistory: ChartDataPoint[];
+  cexHistory: ChartDataPoint[];
+  keyMetrics: {
+    expectedDailyFees: number;
+    last24hFees: number;
+    totalPortfolio: number;
+    uncollectedFees: number;
+  };
+}
+
 export default function AnalyticsPage() {
   const router = useRouter();
   const [timeframe, setTimeframe] = useState('7d');
@@ -45,23 +96,22 @@ export default function AnalyticsPage() {
   
   const { data: summaryData } = usePortfolioSummary();
 
-  // Helper functions defined first
-  const getTimeframeDays = useCallback((tf: string): number => {
+  const getTimeframeDays = (tf: string): number => {
     switch (tf) {
       case '24h': return 1;
       case '7d': return 7;
       case '30d': return 30;
       default: return 7;
     }
-  }, []);
+  };
 
-  const formatTimestamp = useCallback((timestamp: string, timeframe: string) => {
+  const formatTimestamp = (timestamp: string, timeframe: string) => {
     const date = new Date(timestamp);
     if (timeframe === '24h') {
       return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }, []);
+  };
 
   const generateFlatLineData = useCallback((value: number, timeframe: string): ChartDataPoint[] => {
     const days = getTimeframeDays(timeframe);
@@ -79,9 +129,9 @@ export default function AnalyticsPage() {
     }
     
     return data;
-  }, [getTimeframeDays, formatTimestamp]);
+  }, []);
 
-  const processRealHistoricalData = useCallback((rawData: HistoricalPortfolioPoint[], summary: PortfolioSummary, timeframe: string): ChartDataPoint[] => {
+  const processRealHistoricalData = useCallback((rawData: HistoricalDataPoint[], summary: PortfolioSummary, timeframe: string): ChartDataPoint[] => {
     console.log('📈 Processing historical portfolio data:', rawData.length, 'points');
     
     if (!rawData || rawData.length === 0) {
@@ -91,7 +141,7 @@ export default function AnalyticsPage() {
 
     // Process actual historical data
     const processed = rawData
-      .map((point: HistoricalPortfolioPoint) => ({
+      .map((point: HistoricalDataPoint) => ({
         timestamp: point.snapshot_time,
         date: formatTimestamp(point.snapshot_time, timeframe),
         value: parseFloat(String(point.total_portfolio_value || summary.total_value)) // Use historical or fallback to current
@@ -104,7 +154,7 @@ export default function AnalyticsPage() {
     });
 
     return processed;
-  }, [generateFlatLineData, formatTimestamp]);
+  }, [generateFlatLineData]);
 
   const processRealFeeData = useCallback((rawFeeData: FeeGrowthPoint[], summary: PortfolioSummary, timeframe: string): ChartDataPoint[] => {
     console.log('💰 Processing fee data:', rawFeeData.length, 'points');
@@ -118,19 +168,22 @@ export default function AnalyticsPage() {
     const processed = rawFeeData
       .map((point: FeeGrowthPoint) => {
         // Extract current fee values from the API response
-        let currentFees = summary.total_fees; // Fallback to current
+        let currentFees: number;
         
-        if (typeof point.current_fees === 'object' && point.current_fees) {
-          currentFees = point.current_fees.total || 
-                       (point.current_fees.whirlpool || 0) + (point.current_fees.raydium || 0);
-        } else if (typeof point.current_fees === 'number') {
+        if (typeof point.current_fees === 'number') {
           currentFees = point.current_fees;
+        } else if (point.current_fees?.total) {
+          currentFees = point.current_fees.total;
+        } else if (point.current_fees?.whirlpool && point.current_fees?.raydium) {
+          currentFees = point.current_fees.whirlpool + point.current_fees.raydium;
+        } else {
+          currentFees = summary.total_fees; // Fallback to current
         }
 
         return {
           timestamp: point.timestamp,
           date: formatTimestamp(point.timestamp, timeframe),
-          value: parseFloat(String(currentFees))
+          value: currentFees
         };
       })
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
@@ -141,7 +194,7 @@ export default function AnalyticsPage() {
     });
 
     return processed;
-  }, [generateFlatLineData, formatTimestamp]);
+  }, [generateFlatLineData]);
 
   const calculateRealFeeMetrics = useCallback((
     summary: PortfolioSummary, 
@@ -164,7 +217,14 @@ export default function AnalyticsPage() {
       last24hFees = feeGrowthData
         .filter((point: FeeGrowthPoint) => new Date(point.timestamp) >= oneDayAgo)
         .reduce((sum: number, point: FeeGrowthPoint) => {
-          const growth = (typeof point.fee_growth === 'number' ? point.fee_growth : 0);
+          let growth = 0;
+          
+          if (typeof point.fee_growth === 'number') {
+            growth = point.fee_growth;
+          } else if (point.fee_growth?.total) {
+            growth = point.fee_growth.total;
+          }
+          
           return sum + growth;
         }, 0);
       
@@ -274,31 +334,29 @@ export default function AnalyticsPage() {
   }, [summaryData, timeframe, generateFlatLineData]);
 
   const fetchRealAnalyticsData = useCallback(async () => {
-    if (!summaryData) {
-      setIsLoading(true);
+    if (!summaryData?.summary) {
+      console.log('⏳ Waiting for summary data...');
       return;
     }
 
+    setIsLoading(true);
+    setError(null);
+
     try {
-      setIsLoading(true);
-      setError(null);
-
-      console.log('🔄 Fetching REAL analytics data from API...');
-
-      // Get all wallets first
-      const wallets = await getWallets();
-      console.log(`📊 Found ${wallets.length} wallets`);
-
-      if (wallets.length === 0) {
+      console.log('🔄 Fetching real analytics data...');
+      
+      // Get all wallets to find the main one
+      const walletsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets`);
+      const wallets: WalletInfo[] = await walletsResponse.json();
+      
+      if (!wallets || wallets.length === 0) {
         throw new Error('No wallets found');
       }
 
-      // Get the main wallet (highest value) - handle undefined total_value_usd
-      const mainWallet = wallets.reduce((prev, current) => {
-        const prevValue = prev.total_value_usd || 0;
-        const currentValue = current.total_value_usd || 0;
-        return currentValue > prevValue ? current : prev;
-      });
+      // Get the main wallet (highest value)
+      const mainWallet = wallets.reduce((prev: WalletInfo, current: WalletInfo) => 
+        ((current.total_value_usd || 0) > (prev.total_value_usd || 0)) ? current : prev
+      );
 
       console.log(`📈 Using main wallet: ${mainWallet.address.slice(0, 8)}... (${mainWallet.label || 'Unnamed'})`);
 
@@ -312,7 +370,7 @@ export default function AnalyticsPage() {
           console.warn('Fee growth data failed:', err);
           return { growth_data: [], overall_hourly_rate: 0 };
         })
-      ]);
+      ]) as [HistoricalDataPoint[], FeeGrowthData];
 
       console.log('📊 API Data received:', {
         historicalPoints: Array.isArray(historicalData) ? historicalData.length : 0,
@@ -372,16 +430,16 @@ export default function AnalyticsPage() {
     fetchRealAnalyticsData();
   }, [fetchRealAnalyticsData]);
 
-  const formatCurrency = useCallback((value: number) => {
+  const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2
     }).format(value);
-  }, []);
+  };
 
   // Chart.js configuration helpers
-  const createChartData = useCallback((data: ChartDataPoint[], label: string, color: string, gradient = true) => {
+  const createChartData = (data: ChartDataPoint[], label: string, color: string, gradient = true) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
@@ -412,7 +470,7 @@ export default function AnalyticsPage() {
         pointHoverBorderWidth: 3,
       }]
     };
-  }, []);
+  };
 
   const chartOptions = {
     responsive: true,

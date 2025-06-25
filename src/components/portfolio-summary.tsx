@@ -27,7 +27,7 @@ export default function PortfolioSummaryComponent({
   chain 
 }: PortfolioSummaryProps) {
   // Check if we have any values for different chains
-  const hasHyperliquid = summary.hyperliquid_value > 0 || summary.hyperliquid_staking_value > 0;
+  const hasHyperliquid = summary.hyperliquid_value > 0 || summary.hyperliquid_staking_value > 0 || summary.hyperliquid_spot_value > 0;
   const hasEvm = typeof summary.evm_value === 'number' && summary.evm_value > 0;
   const hasSui = (summary.sui_token_value && summary.sui_token_value > 0) ||
                  (summary.sui_bluefin_value && summary.sui_bluefin_value > 0) ||
@@ -56,15 +56,17 @@ export default function PortfolioSummaryComponent({
         span={2}
       />
 
-      {/* Token Value - always shown */}
-      <SummaryCard 
-        title="Token Value" 
-        value={formatDollar(summary.token_value)}
-        description="Combined Token Balances"
-        icon={CurrencyDollarIcon}
-        gradientFrom="from-emerald-400/20"
-        gradientTo="to-green-600/20"
-      />
+      {/* Token Value - always shown except for Hyperliquid wallets */}
+      {chain !== 'hyperliquid' && (
+        <SummaryCard 
+          title="Token Value" 
+          value={formatDollar(summary.token_value)}
+          description="Combined Token Balances"
+          icon={CurrencyDollarIcon}
+          gradientFrom="from-emerald-400/20"
+          gradientTo="to-green-600/20"
+        />
+      )}
 
       {/* LP Position Value - only for Solana wallets or aggregate view */}
       {(!chain || chain === 'solana' || isAggregate) && (
@@ -78,16 +80,21 @@ export default function PortfolioSummaryComponent({
         />
       )}
 
-      {/* Hyperliquid Value - only for Hyperliquid wallets or aggregate view */}
+      {/* Perps Value - only for Hyperliquid wallets or aggregate view */}
       {((!chain && hasHyperliquid) || chain === 'hyperliquid' || (isAggregate && hasHyperliquid)) && (
       <SummaryCard 
-          title="Hyperliquid Value" 
+          title="Perps" 
           value={formatDollar(summary.hyperliquid_value)} 
           description={
-            summary.hyperliquid_staking_value > 0 
-              ? `Trading: $${(
-                  summary.hyperliquid_value - summary.hyperliquid_staking_value
-                ).toLocaleString()} | Staked: $${summary.hyperliquid_staking_value.toLocaleString()}`
+            summary.hyperliquid_staking_value > 0 || summary.hyperliquid_spot_value > 0
+              ? (() => {
+                  const tradingValue = summary.hyperliquid_value - summary.hyperliquid_staking_value - (summary.hyperliquid_spot_value || 0);
+                  const parts = [];
+                  if (tradingValue > 0) parts.push(`Trading: $${tradingValue.toLocaleString()}`);
+                  if (summary.hyperliquid_spot_value > 0) parts.push(`Spot: $${summary.hyperliquid_spot_value.toLocaleString()}`);
+                  if (summary.hyperliquid_staking_value > 0) parts.push(`Staked: $${summary.hyperliquid_staking_value.toLocaleString()}`);
+                  return parts.join(' | ');
+                })()
               : hyperliquidPnl >= 0
               ? `PnL: +$${hyperliquidPnl.toLocaleString()}`
               : `PnL: -$${Math.abs(hyperliquidPnl).toLocaleString()}`
