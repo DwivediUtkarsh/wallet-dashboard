@@ -12,14 +12,6 @@ interface HyperliquidTableProps {
 }
 
 export default function HyperliquidTable({ account, positions, staking, spotHoldings }: HyperliquidTableProps) {
-  // Add debugging for spot holdings
-  console.log("🔍 HyperliquidTable Debug:", {
-    spotHoldings: spotHoldings,
-    spotHoldingsLength: spotHoldings?.length,
-    spotHoldingsType: typeof spotHoldings,
-    spotHoldingsArray: Array.isArray(spotHoldings)
-  });
-
   if (!account && (!positions || positions.length === 0) && !staking && (!spotHoldings || spotHoldings.length === 0)) {
     return (
       <Card>
@@ -37,24 +29,6 @@ export default function HyperliquidTable({ account, positions, staking, spotHold
 
   return (
     <div className="space-y-8">
-      {/* DEBUG: Always show spot holdings debug info */}
-      <Card className="border-red-500 border-2">
-        <CardHeader>
-          <CardTitle className="text-red-600">🔍 DEBUG: Spot Holdings Data</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm">
-            <p><strong>Spot Holdings Array:</strong> {Array.isArray(spotHoldings) ? "Yes" : "No"}</p>
-            <p><strong>Length:</strong> {spotHoldings?.length || 0}</p>
-            <p><strong>Type:</strong> {typeof spotHoldings}</p>
-            <p><strong>Raw Data:</strong></p>
-            <pre className="bg-gray-100 p-2 mt-2 text-xs overflow-auto">
-              {JSON.stringify(spotHoldings, null, 2)}
-            </pre>
-          </div>
-        </CardContent>
-      </Card>
-
       {account && (
         <Card>
           <CardHeader>
