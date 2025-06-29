@@ -60,8 +60,16 @@ export default function PortfolioSummaryComponent({
       {chain !== 'hyperliquid' && (
         <SummaryCard 
           title="Token Value" 
-          value={formatDollar(summary.token_value)}
-          description="Combined Token Balances"
+          value={formatDollar(
+            chain === 'evm' ? (summary.evm_token_value || 0) :
+            chain === 'sui' ? (summary.sui_token_value || 0) :
+            summary.token_value
+          )}
+          description={
+            chain === 'evm' ? "EVM Token Balances" :
+            chain === 'sui' ? "Sui Token Balances" :
+            "Combined Token Balances"
+          }
           icon={CurrencyDollarIcon}
           gradientFrom="from-emerald-400/20"
           gradientTo="to-green-600/20"

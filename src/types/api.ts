@@ -279,6 +279,7 @@ export interface PortfolioSummary {
   hyperliquid_staking_value: number;
   hyperliquid_spot_value: number;
   evm_value?: number;
+  evm_token_value?: number;
   sui_token_value?: number;
   sui_bluefin_value?: number;
   sui_bluefin_fees?: number;
@@ -324,22 +325,37 @@ export interface PortfolioData {
 export interface EvmPortfolioData {
   chains: EvmChainData[];
   total_value_usd: number;
+  summary: {
+    total_token_value: number;
+    total_lending_value: number;
+    total_liquidity_value: number;
+    total_staking_value: number;
+    total_value: number;
+  };
 }
 
 export interface EvmChainData {
   chain_id: string; // 'ARB', 'BASE', 'MATIC', etc.
   name: string; // 'Arbitrum', 'Base', 'Polygon', etc.
+  chain_name: string; // Same as name, for API compatibility
   token_balances: EvmTokenBalance[];
   lending_positions: EvmLendingPosition[];
   liquidity_positions: EvmLiquidityPosition[];
   staking_positions: EvmStakingPosition[];
   total_value_usd: number;
+  token_value: number;
+  lending_value: number;
+  liquidity_value: number;
+  staking_value: number;
 }
 
 export interface EvmTokenBalance {
   token: string;
   symbol: string;
-  balance: number;
+  token_symbol: string;
+  token_address: string;
+  amount: number;
+  balance: number; // Legacy property
   price_usd: number;
   value_usd: number;
   updated_at: string;
@@ -354,6 +370,7 @@ export interface EvmLendingPosition {
   net_value_usd: number;
   supplies: EvmTokenAmount[];
   borrows: EvmTokenAmount[];
+  updated_at: string;
 }
 
 export interface EvmLiquidityPosition {
@@ -362,6 +379,7 @@ export interface EvmLiquidityPosition {
   total_value_usd: number;
   tokens: EvmTokenAmount[];
   rewards: EvmTokenAmount[];
+  updated_at: string;
 }
 
 export interface EvmStakingPosition {
@@ -371,6 +389,7 @@ export interface EvmStakingPosition {
   apr: number;
   tokens: EvmTokenAmount[];
   rewards: EvmTokenAmount[];
+  updated_at: string;
 }
 
 export interface EvmTokenAmount {

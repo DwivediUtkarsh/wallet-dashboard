@@ -148,6 +148,8 @@ export function useTargetTokenHoldings() {
         btc_on_base_aave3: btcOnEvm,
         jitosol_on_marginfi: jitoSolOnMarginfi,
         hype_staked: hypeStaked,
+        hype_spot: hypeSpot,
+        hype_total: hypeTotal,
         btc_price: btcPrice,
         jitosol_price: jitoSolPrice,
         hype_price: hypePrice,

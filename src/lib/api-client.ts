@@ -126,6 +126,41 @@ export async function getEvmData(walletAddress: string) {
 }
 
 /**
+ * Get EVM token balances for a wallet
+ */
+export async function getEvmTokenBalances(walletAddress: string) {
+  return fetchWithErrorHandling(`/evm/tokens/${walletAddress}`);
+}
+
+/**
+ * Get EVM lending positions for a wallet
+ */
+export async function getEvmLendingPositions(walletAddress: string) {
+  return fetchWithErrorHandling(`/evm/lending/${walletAddress}`);
+}
+
+/**
+ * Get EVM liquidity positions for a wallet
+ */
+export async function getEvmLiquidityPositions(walletAddress: string) {
+  return fetchWithErrorHandling(`/evm/liquidity/${walletAddress}`);
+}
+
+/**
+ * Get EVM staking positions for a wallet
+ */
+export async function getEvmStakingPositions(walletAddress: string) {
+  return fetchWithErrorHandling(`/evm/staking/${walletAddress}`);
+}
+
+/**
+ * Get EVM historical data for a wallet
+ */
+export async function getEvmHistory(walletAddress: string, timeframe = '7d') {
+  return fetchWithErrorHandling(`/evm/history/${walletAddress}?timeframe=${timeframe}`);
+}
+
+/**
  * Get Sui portfolio data for a wallet
  */
 export async function getSuiData(walletAddress: string) {

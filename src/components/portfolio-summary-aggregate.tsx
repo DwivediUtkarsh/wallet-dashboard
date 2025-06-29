@@ -106,7 +106,14 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
               maximumFractionDigits: 0 
             }) || '$0'}
           </div>
-          <div className="text-xs text-muted-foreground">BTC on BASE AAVE3</div>
+          <div className="text-xs text-muted-foreground">
+            {targetTokens?.btc_on_base_aave3 ? 
+              `${targetTokens.btc_on_base_aave3.toLocaleString('en-US', { 
+                minimumFractionDigits: 4, 
+                maximumFractionDigits: 4 
+              })} BTC` : '0 BTC'}
+          </div>
+          <div className="text-xs text-muted-foreground opacity-75">BASE AAVE3</div>
         </div>
         
         {/* JitoSOL and HYPE Row */}
@@ -117,7 +124,13 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
               maximumFractionDigits: 0 
             }) || '$0'}
           </div>
-          <div className="text-xs text-muted-foreground">JitoSOL</div>
+          <div className="text-xs text-muted-foreground">
+            {targetTokens?.jitosol_on_marginfi ? 
+              `${targetTokens.jitosol_on_marginfi.toLocaleString('en-US', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+              })} JitoSOL` : '0 JitoSOL'}
+          </div>
           <div className="text-xs text-muted-foreground opacity-75">Marginfi</div>
         </div>
         <div className="text-center">
@@ -127,7 +140,13 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
               maximumFractionDigits: 0 
             }) || '$0'}
           </div>
-          <div className="text-xs text-muted-foreground">HYPE</div>
+          <div className="text-xs text-muted-foreground">
+            {(targetTokens?.hype_total || 0) > 0 ? 
+              `${(targetTokens?.hype_total || 0).toLocaleString('en-US', { 
+                minimumFractionDigits: 0, 
+                maximumFractionDigits: 0 
+              })} HYPE` : '0 HYPE'}
+          </div>
           <div className="text-xs text-muted-foreground opacity-75">Staked + Spot</div>
         </div>
       </div>

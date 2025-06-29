@@ -12,10 +12,10 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Marginfi Accounts</CardTitle>
+          <CardTitle className="text-base md:text-lg">Marginfi Accounts</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center p-6 text-muted-foreground">
+          <div className="flex justify-center p-4 md:p-6 text-muted-foreground text-sm md:text-base">
             No Marginfi accounts found
           </div>
         </CardContent>
@@ -24,14 +24,14 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       {accounts.map((account) => (
         <Card key={account.account_address}>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-lg">
+          <CardHeader className="pb-3 md:pb-2">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-0">
+              <CardTitle className="text-base md:text-lg">
                 Marginfi Account
-                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                <span className="ml-2 text-sm font-normal text-muted-foreground block md:inline">
                   {shortenAddress(account.account_address)}
                 </span>
               </CardTitle>
@@ -47,7 +47,7 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
               <SummaryItem
                 label="Total Collateral"
                 value={formatDollar(account.total_collateral_value)}
@@ -62,74 +62,128 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-2 md:gap-6">
               <div>
-                <h3 className="text-base font-semibold mb-2 text-foreground">Deposits</h3>
+                <h3 className="text-sm md:text-base font-semibold mb-3 md:mb-2 text-foreground">Deposits</h3>
                 {account.deposits.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Token</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead className="text-right">Value</TableHead>
-                        <TableHead className="text-right">APR</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                  <>
+                    {/* Mobile layout - cards */}
+                    <div className="block md:hidden space-y-2">
                       {account.deposits.map((deposit, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="text-foreground">{deposit.token}</TableCell>
-                          <TableCell className="text-right font-mono text-foreground">
-                            {formatNumber(deposit.amount)}
-                          </TableCell>
-                          <TableCell className="text-right text-foreground">
-                            {formatDollar(deposit.value_usd)}
-                          </TableCell>
-                          <TableCell className="text-right text-green-600 dark:text-green-400">
-                            {formatPercent(deposit.apr)}
-                          </TableCell>
-                        </TableRow>
+                        <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-medium text-sm text-foreground">{deposit.token}</span>
+                            <span className="text-sm font-semibold text-foreground">{formatDollar(deposit.value_usd)}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">Amount:</span>
+                              <div className="font-mono text-foreground">{formatNumber(deposit.amount)}</div>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">APR:</span>
+                              <div className="text-green-600 dark:text-green-400">{formatPercent(deposit.apr)}</div>
+                            </div>
+                          </div>
+                        </div>
                       ))}
-                    </TableBody>
-                  </Table>
+                    </div>
+
+                    {/* Desktop layout - table */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Token</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead className="text-right">Value</TableHead>
+                            <TableHead className="text-right">APR</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {account.deposits.map((deposit, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="text-foreground">{deposit.token}</TableCell>
+                              <TableCell className="text-right font-mono text-foreground">
+                                {formatNumber(deposit.amount)}
+                              </TableCell>
+                              <TableCell className="text-right text-foreground">
+                                {formatDollar(deposit.value_usd)}
+                              </TableCell>
+                              <TableCell className="text-right text-green-600 dark:text-green-400">
+                                {formatPercent(deposit.apr)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
                 ) : (
-                  <div className="flex justify-center p-4 text-muted-foreground text-sm">
+                  <div className="flex justify-center p-3 md:p-4 text-muted-foreground text-sm">
                     No deposits
                   </div>
                 )}
               </div>
 
               <div>
-                <h3 className="text-base font-semibold mb-2 text-foreground">Borrows</h3>
+                <h3 className="text-sm md:text-base font-semibold mb-3 md:mb-2 text-foreground">Borrows</h3>
                 {account.borrows.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Token</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead className="text-right">Value</TableHead>
-                        <TableHead className="text-right">APR</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                  <>
+                    {/* Mobile layout - cards */}
+                    <div className="block md:hidden space-y-2">
                       {account.borrows.map((borrow, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="text-foreground">{borrow.token}</TableCell>
-                          <TableCell className="text-right font-mono text-foreground">
-                            {formatNumber(borrow.amount)}
-                          </TableCell>
-                          <TableCell className="text-right text-foreground">
-                            {formatDollar(borrow.value_usd)}
-                          </TableCell>
-                          <TableCell className="text-right text-red-600 dark:text-red-400">
-                            {formatPercent(borrow.apr)}
-                          </TableCell>
-                        </TableRow>
+                        <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-medium text-sm text-foreground">{borrow.token}</span>
+                            <span className="text-sm font-semibold text-foreground">{formatDollar(borrow.value_usd)}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">Amount:</span>
+                              <div className="font-mono text-foreground">{formatNumber(borrow.amount)}</div>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">APR:</span>
+                              <div className="text-red-600 dark:text-red-400">{formatPercent(borrow.apr)}</div>
+                            </div>
+                          </div>
+                        </div>
                       ))}
-                    </TableBody>
-                  </Table>
+                    </div>
+
+                    {/* Desktop layout - table */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Token</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead className="text-right">Value</TableHead>
+                            <TableHead className="text-right">APR</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {account.borrows.map((borrow, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="text-foreground">{borrow.token}</TableCell>
+                              <TableCell className="text-right font-mono text-foreground">
+                                {formatNumber(borrow.amount)}
+                              </TableCell>
+                              <TableCell className="text-right text-foreground">
+                                {formatDollar(borrow.value_usd)}
+                              </TableCell>
+                              <TableCell className="text-right text-red-600 dark:text-red-400">
+                                {formatPercent(borrow.apr)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
                 ) : (
-                  <div className="flex justify-center p-4 text-muted-foreground text-sm">
+                  <div className="flex justify-center p-3 md:p-4 text-muted-foreground text-sm">
                     No borrows
                   </div>
                 )}
@@ -150,8 +204,8 @@ interface SummaryItemProps {
 function SummaryItem({ label, value }: SummaryItemProps) {
   return (
     <div className="bg-muted/50 p-3 rounded-md border">
-      <div className="text-muted-foreground text-sm">{label}</div>
-      <div className="font-semibold text-foreground">{value}</div>
+      <div className="text-muted-foreground text-xs md:text-sm">{label}</div>
+      <div className="font-semibold text-foreground text-sm md:text-base">{value}</div>
     </div>
   );
 }
