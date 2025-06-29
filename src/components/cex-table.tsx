@@ -44,7 +44,7 @@ export default function CexTable({ data }: CexTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.wallets.map((wallet) => {
+              {data.wallets.map((wallet, _index) => {
                 const portfolioPercentage = data.total_value > 0 ? (wallet.net_total_value / data.total_value * 100) : 0;
                 const lastUpdated = new Date(wallet.last_updated);
                 const isRecent = (Date.now() - lastUpdated.getTime()) < 30 * 60 * 1000; // 30 minutes

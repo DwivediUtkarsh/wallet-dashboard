@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatPercent, formatDollarFixed } from "@/lib/utils";
-import { PortfolioSummaryData } from "@/types/api";
-import { useTargetTokenHoldings } from "@/hooks/use-portfolio";
+import { PortfolioSummaryData, LastFeeCollection } from "@/types/api";
+import { useTargetTokenHoldings, useLastFeeCollection } from "@/hooks/use-portfolio";
 import { 
   ChartBarIcon, 
   WalletIcon, 
@@ -40,6 +40,12 @@ interface SummaryCardProps {
 export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggregateProps) {
   // Use the new hook to get target token holdings
   const { data: targetTokens, isLoading: isLoadingTargetTokens } = useTargetTokenHoldings();
+  
+  // Use the new hook to get last fee collection data
+  const { data: lastFeeCollection, isLoading: isLoadingLastFeeCollection } = useLastFeeCollection() as {
+    data: LastFeeCollection | undefined;
+    isLoading: boolean;
+  };
 
   // Check if we have any value for different chains
   const hasHyperliquid = data.hyperliquid_summary && (data.summary.hyperliquid_value > 0);
@@ -156,6 +162,41 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     </div>
   );
 
+  // Custom content for Uncollected Fees widget
+  const uncollectedFeesContent = isLoadingLastFeeCollection ? (
+    <div className="space-y-2">
+      <div className="animate-pulse">
+        <div className="h-8 bg-muted rounded mb-2"></div>
+        <div className="h-4 bg-muted rounded mb-1"></div>
+        <div className="h-3 bg-muted rounded"></div>
+      </div>
+    </div>
+  ) : (
+    <div className="space-y-2">
+      <div className="text-2xl font-bold bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
+        {formatDollarFixed(totalFees)}
+      </div>
+      <div className="space-y-1">
+        <p className="text-sm text-muted-foreground leading-tight">Pending fee rewards</p>
+        {lastFeeCollection?.last_collection_time && (
+          <div className="text-xs text-muted-foreground">
+            <span className="opacity-75">Last collected: </span>
+            <span className="font-medium">
+              {new Date(lastFeeCollection.last_collection_time).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+                timeZoneName: 'short'
+              })}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   // First line cards: Total Value, Shares Info, Token Holdings, Uncollected Fees
   const firstLineCards: SummaryCardProps[] = [
     {
@@ -186,11 +227,12 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     },
     {
       title: "Uncollected Fees",
-      value: formatDollarFixed(totalFees),
-      description: "Pending fee rewards",
+      value: "", // Will use custom content
+      description: "",
       icon: BanknotesIcon,
       gradient: "from-green-500 to-emerald-500",
-      bgGradient: "from-green-500/10 to-emerald-500/10"
+      bgGradient: "from-green-500/10 to-emerald-500/10",
+      customContent: uncollectedFeesContent
     }
   ];
 

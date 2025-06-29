@@ -27,6 +27,9 @@ export default function PositionsTable({ positions, title, emptyMessage }: Posit
 
   // Sort positions by value (highest first)
   const sortedPositions = [...positions].sort((a, b) => b.total_value_usd - a.total_value_usd);
+  
+  // Calculate total uncollected fees for percentage calculation
+  const totalUncollectedFees = sortedPositions.reduce((sum, position) => sum + position.uncollected_fees_usd, 0);
 
   return (
     <Card>
@@ -66,6 +69,15 @@ export default function PositionsTable({ positions, title, emptyMessage }: Posit
                 <div>
                   <span className="text-gray-500">Uncollected Fees:</span>
                   <div className="font-semibold">{formatDollar(position.uncollected_fees_usd)}</div>
+                  <div className="text-xs text-gray-400">
+                    {totalUncollectedFees > 0 ? `${((position.uncollected_fees_usd / totalUncollectedFees) * 100).toFixed(1)}% of total` : '0% of total'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-500">Fee/Value Ratio:</div>
+                  <div className="font-semibold">
+                    {position.total_value_usd > 0 ? `${((position.uncollected_fees_usd / position.total_value_usd) * 100).toFixed(2)}%` : '0%'}
+                  </div>
                 </div>
                 <div className="text-gray-500">
                   {formatTimeAgo(position.updated_at)}
@@ -77,57 +89,69 @@ export default function PositionsTable({ positions, title, emptyMessage }: Posit
 
         {/* Desktop layout - table */}
         <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Pool</TableHead>
-                <TableHead>Tokens</TableHead>
-                <TableHead className="text-right">Status</TableHead>
-                <TableHead className="text-right">Value</TableHead>
-                <TableHead className="text-right">Uncollected Fees</TableHead>
-                <TableHead className="text-right">Last Updated</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedPositions.map((position, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">
-                    {position.pool}
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span>{position.token_a_symbol}</span>
-                        <span className="font-mono text-xs">
-                          {formatNumber(position.token_a_qty)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>{position.token_b_symbol}</span>
-                        <span className="font-mono text-xs">
-                          {formatNumber(position.token_b_qty)}
-                        </span>
-                      </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Pool</TableHead>
+              <TableHead>Tokens</TableHead>
+              <TableHead className="text-right">Status</TableHead>
+              <TableHead className="text-right">Value</TableHead>
+              <TableHead className="text-right">Uncollected Fees</TableHead>
+              <TableHead className="text-right">Fee %</TableHead>
+              <TableHead className="text-right">Fee/Value Ratio</TableHead>
+              <TableHead className="text-right">Last Updated</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedPositions.map((position, index) => (
+              <TableRow key={index}>
+                <TableCell className="font-medium">
+                  {position.pool}
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span>{position.token_a_symbol}</span>
+                      <span className="font-mono text-xs">
+                        {formatNumber(position.token_a_qty)}
+                      </span>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span className={`px-2 py-1 rounded-full text-xs ${position.in_range ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
-                      {position.in_range ? 'In Range' : 'Out of Range'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">
-                    {formatDollar(position.total_value_usd)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatDollar(position.uncollected_fees_usd)}
-                  </TableCell>
-                  <TableCell className="text-right text-gray-500 text-sm">
-                    {formatTimeAgo(position.updated_at)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    <div className="flex items-center justify-between">
+                      <span>{position.token_b_symbol}</span>
+                      <span className="font-mono text-xs">
+                        {formatNumber(position.token_b_qty)}
+                      </span>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <span className={`px-2 py-1 rounded-full text-xs ${position.in_range ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                    {position.in_range ? 'In Range' : 'Out of Range'}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right font-semibold">
+                  {formatDollar(position.total_value_usd)}
+                </TableCell>
+                <TableCell className="text-right">
+                  {formatDollar(position.uncollected_fees_usd)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <span className="text-sm font-medium">
+                    {totalUncollectedFees > 0 ? `${((position.uncollected_fees_usd / totalUncollectedFees) * 100).toFixed(1)}%` : '0%'}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right">
+                  <span className="text-sm font-medium">
+                    {position.total_value_usd > 0 ? `${((position.uncollected_fees_usd / position.total_value_usd) * 100).toFixed(2)}%` : '0%'}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right text-gray-500 text-sm">
+                  {formatTimeAgo(position.updated_at)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
         </div>
       </CardContent>
     </Card>

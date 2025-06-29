@@ -119,11 +119,11 @@ export default function EvmDashboard({ data }: EvmDashboardProps) {
               
               {expandedChains.has(chain.chain_id?.toString()) && (
                 <CardContent className="pt-0">
-                  <ChainDashboard chain={chain} />
+            <ChainDashboard chain={chain} />
                 </CardContent>
               )}
             </Card>
-          ))}
+        ))}
         </div>
       ) : (
         <Card>
@@ -315,7 +315,7 @@ function LendingPositionCard({ position }: LendingPositionCardProps) {
       <div className="space-y-3">
         <h4 className="text-sm md:text-base font-medium">Supplied Assets</h4>
         {position.supplies && position.supplies.length > 0 ? (
-          <div className="space-y-2">
+      <div className="space-y-2">
             {/* Mobile layout - stacked cards */}
             <div className="block md:hidden space-y-2">
               {position.supplies.map((supply, index) => (
@@ -333,24 +333,24 @@ function LendingPositionCard({ position }: LendingPositionCardProps) {
             
             {/* Desktop layout - table */}
             <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
+          <Table>
+            <TableHeader>
+              <TableRow>
                     <TableHead className="text-xs">Token</TableHead>
                     <TableHead className="text-xs">Amount</TableHead>
                     <TableHead className="text-xs">Value</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {position.supplies.map((supply, index) => (
-                    <TableRow key={index}>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {position.supplies.map((supply, index) => (
+                <TableRow key={index}>
                       <TableCell className="text-sm">{supply.token || supply.symbol}</TableCell>
                       <TableCell className="text-sm">{formatNumber(supply.amount || 0)}</TableCell>
                       <TableCell className="text-sm">{formatDollar(supply.value_usd || 0)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
             </div>
           </div>
         ) : (
@@ -361,7 +361,7 @@ function LendingPositionCard({ position }: LendingPositionCardProps) {
       <div className="space-y-3">
         <h4 className="text-sm md:text-base font-medium">Borrowed Assets</h4>
         {position.borrows && position.borrows.length > 0 ? (
-          <div className="space-y-2">
+      <div className="space-y-2">
             {/* Mobile layout - stacked cards */}
             <div className="block md:hidden space-y-2">
               {position.borrows.map((borrow, index) => (
@@ -379,24 +379,24 @@ function LendingPositionCard({ position }: LendingPositionCardProps) {
             
             {/* Desktop layout - table */}
             <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
+          <Table>
+            <TableHeader>
+              <TableRow>
                     <TableHead className="text-xs">Token</TableHead>
                     <TableHead className="text-xs">Amount</TableHead>
                     <TableHead className="text-xs">Value</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {position.borrows.map((borrow, index) => (
-                    <TableRow key={index}>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {position.borrows.map((borrow, index) => (
+                <TableRow key={index}>
                       <TableCell className="text-sm">{borrow.token || borrow.symbol}</TableCell>
                       <TableCell className="text-sm">{formatNumber(borrow.amount || 0)}</TableCell>
                       <TableCell className="text-sm">{formatDollar(borrow.value_usd || 0)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
             </div>
           </div>
         ) : (
@@ -463,11 +463,11 @@ function LiquidityPositionCard({ position }: LiquidityPositionCardProps) {
                 const calculatedPrice = reward.price_usd || (reward.amount && reward.amount > 0 ? (reward.value_usd || 0) / reward.amount : 0);
                 
                 return (
-                  <TableRow key={index}>
+                <TableRow key={index}>
                     <TableCell>{reward.token || reward.symbol}</TableCell>
                     <TableCell>{formatNumber(reward.amount || 0)}</TableCell>
                     <TableCell>{formatDollar(calculatedPrice)}</TableCell>
-                  </TableRow>
+                </TableRow>
                 );
               })}
             </TableBody>

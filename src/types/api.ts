@@ -518,4 +518,11 @@ export interface LendingSummaryData {
   summary: LendingSummary;
   positions: LendingAccount[];
   last_updated: string;
+}
+
+export interface LastFeeCollection {
+  wallet_address: string;
+  last_collection_time: string | null;
+  transaction_signature: string | null;
+  usd_value: number;
 } 

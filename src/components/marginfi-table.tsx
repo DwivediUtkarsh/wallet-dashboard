@@ -91,32 +91,32 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
 
                     {/* Desktop layout - table */}
                     <div className="hidden md:block">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Token</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="text-right">Value</TableHead>
-                            <TableHead className="text-right">APR</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {account.deposits.map((deposit, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="text-foreground">{deposit.token}</TableCell>
-                              <TableCell className="text-right font-mono text-foreground">
-                                {formatNumber(deposit.amount)}
-                              </TableCell>
-                              <TableCell className="text-right text-foreground">
-                                {formatDollar(deposit.value_usd)}
-                              </TableCell>
-                              <TableCell className="text-right text-green-600 dark:text-green-400">
-                                {formatPercent(deposit.apr)}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Token</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead className="text-right">Value</TableHead>
+                        <TableHead className="text-right">APR</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {account.deposits.map((deposit, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="text-foreground">{deposit.token}</TableCell>
+                          <TableCell className="text-right font-mono text-foreground">
+                            {formatNumber(deposit.amount)}
+                          </TableCell>
+                          <TableCell className="text-right text-foreground">
+                            {formatDollar(deposit.value_usd)}
+                          </TableCell>
+                          <TableCell className="text-right text-green-600 dark:text-green-400">
+                            {formatPercent(deposit.apr)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                     </div>
                   </>
                 ) : (
@@ -154,32 +154,32 @@ export default function MarginfiTable({ accounts }: MarginfiTableProps) {
 
                     {/* Desktop layout - table */}
                     <div className="hidden md:block">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Token</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="text-right">Value</TableHead>
-                            <TableHead className="text-right">APR</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {account.borrows.map((borrow, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="text-foreground">{borrow.token}</TableCell>
-                              <TableCell className="text-right font-mono text-foreground">
-                                {formatNumber(borrow.amount)}
-                              </TableCell>
-                              <TableCell className="text-right text-foreground">
-                                {formatDollar(borrow.value_usd)}
-                              </TableCell>
-                              <TableCell className="text-right text-red-600 dark:text-red-400">
-                                {formatPercent(borrow.apr)}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Token</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead className="text-right">Value</TableHead>
+                        <TableHead className="text-right">APR</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {account.borrows.map((borrow, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="text-foreground">{borrow.token}</TableCell>
+                          <TableCell className="text-right font-mono text-foreground">
+                            {formatNumber(borrow.amount)}
+                          </TableCell>
+                          <TableCell className="text-right text-foreground">
+                            {formatDollar(borrow.value_usd)}
+                          </TableCell>
+                          <TableCell className="text-right text-red-600 dark:text-red-400">
+                            {formatPercent(borrow.apr)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                     </div>
                   </>
                 ) : (

@@ -100,38 +100,38 @@ export default function HyperliquidTable({ account, positions, staking, spotHold
 
             {/* Desktop layout - table */}
             <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Asset</TableHead>
-                    <TableHead className="text-right">Balance</TableHead>
-                    <TableHead className="text-right">Current Price</TableHead>
-                    <TableHead className="text-right">USD Value</TableHead>
-                    <TableHead>Price Source</TableHead>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Asset</TableHead>
+                  <TableHead className="text-right">Balance</TableHead>
+                  <TableHead className="text-right">Current Price</TableHead>
+                  <TableHead className="text-right">USD Value</TableHead>
+                  <TableHead>Price Source</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {spotHoldings.map((holding, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{holding.coin}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatNumber(holding.balance)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatDollar(holding.current_price)}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {formatDollar(holding.usd_value)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {holding.price_source}
+                      </Badge>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {spotHoldings.map((holding, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{holding.coin}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatNumber(holding.balance)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatDollar(holding.current_price)}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatDollar(holding.usd_value)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">
-                          {holding.price_source}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                ))}
+              </TableBody>
+            </Table>
             </div>
           </CardContent>
         </Card>
@@ -185,34 +185,34 @@ export default function HyperliquidTable({ account, positions, staking, spotHold
 
                 {/* Desktop layout - table */}
                 <div className="hidden md:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Validator</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead className="text-right">Status</TableHead>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Validator</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {staking.delegations.map((delegation: HyperliquidStakingDelegation, index: number) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{delegation.validator.slice(0, 10)}...</TableCell>
+                        <TableCell className="text-right font-mono">
+                          {formatNumber(delegation.amount)} HYPE
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {delegation.locked_until ? (
+                            <span className="text-yellow-600 dark:text-yellow-400">
+                              Locked until {new Date(delegation.locked_until).toLocaleDateString()}
+                            </span>
+                          ) : (
+                            <span className="text-green-600 dark:text-green-400">Liquid</span>
+                          )}
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {staking.delegations.map((delegation: HyperliquidStakingDelegation, index: number) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{delegation.validator.slice(0, 10)}...</TableCell>
-                          <TableCell className="text-right font-mono">
-                            {formatNumber(delegation.amount)} HYPE
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {delegation.locked_until ? (
-                              <span className="text-yellow-600 dark:text-yellow-400">
-                                Locked until {new Date(delegation.locked_until).toLocaleDateString()}
-                              </span>
-                            ) : (
-                              <span className="text-green-600 dark:text-green-400">Liquid</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                    ))}
+                  </TableBody>
+                </Table>
                 </div>
               </div>
             )}
@@ -282,66 +282,66 @@ export default function HyperliquidTable({ account, positions, staking, spotHold
 
             {/* Desktop layout - table */}
             <div className="hidden lg:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Asset</TableHead>
-                    <TableHead>Side</TableHead>
-                    <TableHead className="text-right">Size</TableHead>
-                    <TableHead className="text-right">Entry</TableHead>
-                    <TableHead className="text-right">Mark</TableHead>
-                    <TableHead className="text-right">Margin</TableHead>
-                    <TableHead className="text-right">Lev</TableHead>
-                    <TableHead className="text-right">PnL</TableHead>
-                    <TableHead className="text-right">ROE%</TableHead>
-                    <TableHead className="text-right">Funding</TableHead>
-                    <TableHead className="text-right">Liq Price</TableHead>
-                    <TableHead>Risk</TableHead>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Asset</TableHead>
+                  <TableHead>Side</TableHead>
+                  <TableHead className="text-right">Size</TableHead>
+                  <TableHead className="text-right">Entry</TableHead>
+                  <TableHead className="text-right">Mark</TableHead>
+                  <TableHead className="text-right">Margin</TableHead>
+                  <TableHead className="text-right">Lev</TableHead>
+                  <TableHead className="text-right">PnL</TableHead>
+                  <TableHead className="text-right">ROE%</TableHead>
+                  <TableHead className="text-right">Funding</TableHead>
+                  <TableHead className="text-right">Liq Price</TableHead>
+                  <TableHead>Risk</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {positions.map((position, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{position.coin}</TableCell>
+                    <TableCell>
+                      <Badge variant={position.is_long ? "default" : "destructive"}>
+                        {position.is_long ? "LONG" : "SHORT"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatNumber(Math.abs(position.size))}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatNumber(position.entry_price)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatNumber(position.mark_price)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatDollar(position.margin)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {position.leverage}x
+                    </TableCell>
+                    <TableCell className={`text-right ${position.pnl >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                      {formatDollar(position.pnl)}
+                    </TableCell>
+                    <TableCell className={`text-right ${position.pnl_percent >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                      {formatPercent(position.pnl_percent / 100)}
+                    </TableCell>
+                    <TableCell className={`text-right ${position.funding_usd <= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                      {formatDollar(position.funding_usd)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatNumber(position.liq_price)}
+                    </TableCell>
+                    <TableCell>
+                      <RiskBadge risk={position.risk_level} />
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {positions.map((position, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{position.coin}</TableCell>
-                      <TableCell>
-                        <Badge variant={position.is_long ? "default" : "destructive"}>
-                          {position.is_long ? "LONG" : "SHORT"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatNumber(Math.abs(position.size))}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatNumber(position.entry_price)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatNumber(position.mark_price)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatDollar(position.margin)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {position.leverage}x
-                      </TableCell>
-                      <TableCell className={`text-right ${position.pnl >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-                        {formatDollar(position.pnl)}
-                      </TableCell>
-                      <TableCell className={`text-right ${position.pnl_percent >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-                        {formatPercent(position.pnl_percent / 100)}
-                      </TableCell>
-                      <TableCell className={`text-right ${position.funding_usd <= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-                        {formatDollar(position.funding_usd)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatNumber(position.liq_price)}
-                      </TableCell>
-                      <TableCell>
-                        <RiskBadge risk={position.risk_level} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                ))}
+              </TableBody>
+            </Table>
             </div>
           </CardContent>
         </Card>

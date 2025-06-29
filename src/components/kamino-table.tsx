@@ -119,7 +119,7 @@ export default function KaminoTable({ accounts }: KaminoTableProps) {
                 ) : (
                   <div className="flex justify-center p-3 md:p-4 text-muted-foreground text-sm">
                     No supplies
-                  </div>
+              </div>
                 )}
               </div>
 
@@ -144,23 +144,23 @@ export default function KaminoTable({ accounts }: KaminoTableProps) {
                               <span className="text-muted-foreground">APR:</span>
                               <div className="text-red-600 dark:text-red-400">{formatPercent(borrow.apr)}</div>
                             </div>
-                          </div>
+              </div>
                         </div>
                       ))}
-                    </div>
-
+            </div>
+            
                     {/* Desktop layout - table */}
                     <div className="hidden md:block">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Token</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="text-right">Value</TableHead>
-                            <TableHead className="text-right">APR</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Token</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Value</TableHead>
+                    <TableHead className="text-right">APR</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                           {account.borrows.map((borrow, index) => (
                             <TableRow key={index}>
                               <TableCell className="text-foreground">{borrow.token}</TableCell>
@@ -173,10 +173,10 @@ export default function KaminoTable({ accounts }: KaminoTableProps) {
                               <TableCell className="text-right text-red-600 dark:text-red-400">
                                 {formatPercent(borrow.apr)}
                               </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
                     </div>
                   </>
                 ) : (

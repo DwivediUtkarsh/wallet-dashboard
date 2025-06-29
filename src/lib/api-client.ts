@@ -274,4 +274,11 @@ export async function getHistoricalData(walletAddress: string, timeframe = '7d')
  */
 export async function getFeeCollections(walletAddress: string, timeframe = '30d') {
   return fetchWithErrorHandling(`/fee-collections/${walletAddress}?timeframe=${timeframe}`);
+}
+
+/**
+ * Get the last fee collection event for the main Solana wallet
+ */
+export async function getLastFeeCollection() {
+  return fetchWithErrorHandling('/last-fee-collection');
 } 

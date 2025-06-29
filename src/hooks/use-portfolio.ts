@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getPortfolioData, getPortfolioSummary, getTopTokens, getWallets, getLendingSummary, getExposure } from '@/lib/api-client';
+import { getPortfolioData, getPortfolioSummary, getTopTokens, getWallets, getLendingSummary, getExposure, getLastFeeCollection } from '@/lib/api-client';
 import { PortfolioData, PortfolioSummaryData, TopTokenData, WalletInfo, LendingSummaryData } from '@/types/api';
 
 /**
@@ -162,6 +162,18 @@ export function useTargetTokenHoldings() {
       return result;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+}
+
+/**
+ * Hook to fetch the last fee collection event for the main Solana wallet
+ */
+export function useLastFeeCollection() {
+  return useQuery({
+    queryKey: ['last-fee-collection'],
+    queryFn: getLastFeeCollection,
+    staleTime: 2 * 60 * 1000, // 2 minutes (more frequent since this is recent activity)
     refetchOnWindowFocus: false,
   });
 } 

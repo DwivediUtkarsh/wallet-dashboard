@@ -67,41 +67,41 @@ export default function TokensTable({ tokens }: TokensTableProps) {
 
         {/* Desktop layout - table */}
         <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Token</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Value</TableHead>
-                <TableHead className="text-right">Last Updated</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Token</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="text-right">Price</TableHead>
+              <TableHead className="text-right">Value</TableHead>
+              <TableHead className="text-right">Last Updated</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedTokens.map((token) => (
+              <TableRow key={token.symbol}>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <span>{token.symbol}</span>
+                    <span className="text-xs text-gray-500">{token.name}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-right font-mono">
+                  {formatNumber(token.amount)}
+                </TableCell>
+                <TableCell className="text-right">
+                  {formatDollar(token.price_usd)}
+                </TableCell>
+                <TableCell className="text-right font-semibold">
+                  {formatDollar(token.value_usd)}
+                </TableCell>
+                <TableCell className="text-right text-gray-500 text-sm">
+                  {formatTimeAgo(token.updated_at)}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedTokens.map((token) => (
-                <TableRow key={token.symbol}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <span>{token.symbol}</span>
-                      <span className="text-xs text-gray-500">{token.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatNumber(token.amount)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatDollar(token.price_usd)}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">
-                    {formatDollar(token.value_usd)}
-                  </TableCell>
-                  <TableCell className="text-right text-gray-500 text-sm">
-                    {formatTimeAgo(token.updated_at)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            ))}
+          </TableBody>
+        </Table>
         </div>
       </CardContent>
     </Card>
