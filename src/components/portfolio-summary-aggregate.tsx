@@ -107,17 +107,17 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
         {/* BTC Row */}
         <div className="col-span-2 text-center">
           <div className="text-lg font-bold bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent">
-            ${targetTokens?.btc_value_usd?.toLocaleString('en-US', { 
-              minimumFractionDigits: 0, 
-              maximumFractionDigits: 0 
-            }) || '$0'}
-          </div>
-          <div className="text-xs text-muted-foreground">
             {targetTokens?.btc_on_base_aave3 ? 
               `${targetTokens.btc_on_base_aave3.toLocaleString('en-US', { 
                 minimumFractionDigits: 4, 
                 maximumFractionDigits: 4 
               })} BTC` : '0 BTC'}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            ${targetTokens?.btc_value_usd?.toLocaleString('en-US', { 
+              minimumFractionDigits: 0, 
+              maximumFractionDigits: 0 
+            }) || '$0'}
           </div>
           <div className="text-xs text-muted-foreground opacity-75">BASE AAVE3</div>
         </div>
@@ -125,33 +125,33 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
         {/* JitoSOL and HYPE Row */}
         <div className="text-center">
           <div className="text-lg font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-            ${targetTokens?.jitosol_value_usd?.toLocaleString('en-US', { 
-              minimumFractionDigits: 0, 
-              maximumFractionDigits: 0 
-            }) || '$0'}
-          </div>
-          <div className="text-xs text-muted-foreground">
             {targetTokens?.jitosol_on_marginfi ? 
               `${targetTokens.jitosol_on_marginfi.toLocaleString('en-US', { 
                 minimumFractionDigits: 2, 
                 maximumFractionDigits: 2 
               })} JitoSOL` : '0 JitoSOL'}
           </div>
-          <div className="text-xs text-muted-foreground opacity-75">Marginfi</div>
-        </div>
-        <div className="text-center">
-          <div className="text-lg font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
-            ${targetTokens?.hype_value_usd?.toLocaleString('en-US', { 
+          <div className="text-xs text-muted-foreground">
+            ${targetTokens?.jitosol_value_usd?.toLocaleString('en-US', { 
               minimumFractionDigits: 0, 
               maximumFractionDigits: 0 
             }) || '$0'}
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground opacity-75">Marginfi</div>
+        </div>
+        <div className="text-center">
+          <div className="text-lg font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
             {(targetTokens?.hype_total || 0) > 0 ? 
               `${(targetTokens?.hype_total || 0).toLocaleString('en-US', { 
                 minimumFractionDigits: 0, 
                 maximumFractionDigits: 0 
               })} HYPE` : '0 HYPE'}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            ${targetTokens?.hype_value_usd?.toLocaleString('en-US', { 
+              minimumFractionDigits: 0, 
+              maximumFractionDigits: 0 
+            }) || '$0'}
           </div>
           <div className="text-xs text-muted-foreground opacity-75">Staked + Spot</div>
         </div>
