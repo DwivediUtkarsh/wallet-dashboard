@@ -259,7 +259,45 @@ export async function getLendingSummary(): Promise<LendingSummaryData> {
  * Get fee growth data for a wallet
  */
 export async function getFeeGrowthData(walletAddress: string, timeframe = '7d') {
-  return fetchWithErrorHandling(`/fee-growth/${walletAddress}?timeframe=${timeframe}`);
+  return fetchWithErrorHandling(`/fee-growth?wallet=${walletAddress}&timeframe=${timeframe}`);
+}
+
+/**
+ * Fee metrics response interface for enhanced fee calculations
+ */
+export interface FeeMetricsResponse {
+  wallet_address: string;
+  timestamp: string;
+  last_24h_fees: {
+    amount_usd: number;
+    calculation_method: string;
+    data_points_used: number;
+  };
+  expected_24h_fees: {
+    amount_usd: number;
+    hourly_rate: number;
+    calculation_method: string;
+    data_points_used: number;
+  };
+  performance_metrics: {
+    efficiency_percentage: number;
+    rate_stability: number;
+    data_quality_score: number;
+  };
+  calculation_details: {
+    total_time_span_hours: number;
+    hourly_rates_count: number;
+    recent_24h_data_points: number;
+    available_methods: string[];
+    selected_method: string;
+  };
+}
+
+/**
+ * Get comprehensive fee metrics for a wallet including 24h calculations
+ */
+export async function getFeeMetrics(walletAddress: string, method = 'auto'): Promise<FeeMetricsResponse> {
+  return fetchWithErrorHandling<FeeMetricsResponse>(`/fee-metrics?wallet=${walletAddress}&method=${method}`);
 }
 
 /**
@@ -281,4 +319,18 @@ export async function getFeeCollections(walletAddress: string, timeframe = '30d'
  */
 export async function getLastFeeCollection() {
   return fetchWithErrorHandling('/last-fee-collection');
+}
+
+/**
+ * Get historical portfolio data for all chains
+ */
+export async function getPortfolioHistory(walletAddress: string, timeframe = '7d') {
+  return fetchWithErrorHandling(`/portfolio-history?wallet=${walletAddress}&timeframe=${timeframe}`);
+}
+
+/**
+ * Get portfolio summary with current values and chain breakdown for a specific wallet
+ */
+export async function getWalletPortfolioSummary(walletAddress: string) {
+  return fetchWithErrorHandling(`/portfolio-summary?wallet=${walletAddress}`);
 } 

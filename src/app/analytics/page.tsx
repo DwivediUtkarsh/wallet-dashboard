@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { usePortfolioSummary } from '@/hooks/use-portfolio';
-import { getHistoricalData, getFeeGrowthData } from '@/lib/api-client';
+import { getFeeGrowthData, getFeeMetrics, getPortfolioHistory } from '@/lib/api-client';
 import type { PortfolioSummary } from '@/types/api';
 import {
   Chart as ChartJS,
@@ -55,14 +55,14 @@ interface FeeGrowthPoint {
   } | number;
 }
 
-interface FeeGrowthData {
-  growth_data: FeeGrowthPoint[];
-  overall_hourly_rate: number;
-}
-
 interface HistoricalDataPoint {
-  snapshot_time: string;
-  total_portfolio_value?: string | number;
+  timestamp: string;
+  total_portfolio?: number;
+  solana_total?: number;
+  hyperliquid_total?: number;
+  evm_total?: number;
+  sui_total?: number;
+  cex_total?: number;
 }
 
 interface WalletInfo {
@@ -84,6 +84,14 @@ interface AnalyticsData {
     last24hFees: number;
     totalPortfolio: number;
     uncollectedFees: number;
+    performanceMetrics?: {
+      efficiency: number;
+      rateStability: number;
+      dataQuality: number;
+      hourlyRate: number;
+      calculationMethod: string;
+      last24hMethod: string;
+    };
   };
 }
 
@@ -96,22 +104,38 @@ export default function AnalyticsPage() {
   
   const { data: summaryData } = usePortfolioSummary();
 
-  const getTimeframeDays = (tf: string): number => {
+  const getTimeframeDays = useCallback((tf: string): number => {
     switch (tf) {
       case '24h': return 1;
       case '7d': return 7;
       case '30d': return 30;
       default: return 7;
     }
-  };
+  }, []);
 
-  const formatTimestamp = (timestamp: string, timeframe: string) => {
+  const formatTimestamp = useCallback((timestamp: string, timeframe: string) => {
+    // Add safety check for invalid timestamps
+    if (!timestamp || timestamp === 'Invalid Date') {
+      return 'N/A';
+    }
+    
+    try {
     const date = new Date(timestamp);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'N/A';
+      }
+      
     if (timeframe === '24h') {
       return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+    } catch (error) {
+      console.warn('Error formatting timestamp:', timestamp, error);
+      return 'N/A';
+    }
+  }, []);
 
   const generateFlatLineData = useCallback((value: number, timeframe: string): ChartDataPoint[] => {
     const days = getTimeframeDays(timeframe);
@@ -129,7 +153,7 @@ export default function AnalyticsPage() {
     }
     
     return data;
-  }, []);
+  }, [getTimeframeDays, formatTimestamp]);
 
   const processRealHistoricalData = useCallback((rawData: HistoricalDataPoint[], summary: PortfolioSummary, timeframe: string): ChartDataPoint[] => {
     console.log('📈 Processing historical portfolio data:', rawData.length, 'points');
@@ -139,13 +163,15 @@ export default function AnalyticsPage() {
       return generateFlatLineData(summary.total_value, timeframe);
     }
 
-    // Process actual historical data
+    // Process actual historical data with safety checks
     const processed = rawData
+      .filter((point: HistoricalDataPoint) => point.timestamp && point.timestamp !== 'Invalid Date')
       .map((point: HistoricalDataPoint) => ({
-        timestamp: point.snapshot_time,
-        date: formatTimestamp(point.snapshot_time, timeframe),
-        value: parseFloat(String(point.total_portfolio_value || summary.total_value)) // Use historical or fallback to current
+        timestamp: point.timestamp,
+        date: formatTimestamp(point.timestamp, timeframe),
+        value: parseFloat(String(point.total_portfolio || summary.total_value))
       }))
+      .filter((point: ChartDataPoint) => point.date !== 'N/A') // Filter out invalid dates
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     console.log('📈 Processed portfolio data:', {
@@ -154,7 +180,7 @@ export default function AnalyticsPage() {
     });
 
     return processed;
-  }, [generateFlatLineData]);
+  }, [generateFlatLineData, formatTimestamp]);
 
   const processRealFeeData = useCallback((rawFeeData: FeeGrowthPoint[], summary: PortfolioSummary, timeframe: string): ChartDataPoint[] => {
     console.log('💰 Processing fee data:', rawFeeData.length, 'points');
@@ -194,103 +220,72 @@ export default function AnalyticsPage() {
     });
 
     return processed;
-  }, [generateFlatLineData]);
+  }, [generateFlatLineData, formatTimestamp]);
 
-  const calculateRealFeeMetrics = useCallback((
+  const calculateRealFeeMetrics = useCallback(async (
     summary: PortfolioSummary, 
-    feeGrowthData: FeeGrowthPoint[], 
-    overallHourlyRate: number
+    mainWalletAddress: string
   ) => {
-    console.log('🧮 Calculating real fee metrics from API data...');
+    console.log('🧮 Fetching real fee metrics from enhanced API...');
 
-    let expectedDailyFees = 0;
-    let last24hFees = 0;
+    try {
+      // Use the new fee-metrics endpoint for accurate calculations
+      const feeMetrics = await getFeeMetrics(mainWalletAddress, 'auto');
 
-    if (feeGrowthData.length > 0 && overallHourlyRate > 0) {
-      // Use REAL hourly rate from API
-      expectedDailyFees = overallHourlyRate * 24;
-      
-      // Calculate actual 24h fee generation from growth data
-      const now = new Date();
-      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      
-      last24hFees = feeGrowthData
-        .filter((point: FeeGrowthPoint) => new Date(point.timestamp) >= oneDayAgo)
-        .reduce((sum: number, point: FeeGrowthPoint) => {
-          let growth = 0;
-          
-          if (typeof point.fee_growth === 'number') {
-            growth = point.fee_growth;
-          } else if (point.fee_growth?.total) {
-            growth = point.fee_growth.total;
+      if (feeMetrics) {
+        console.log('✅ Using ENHANCED fee metrics from API:', {
+          last24hFees: feeMetrics.last_24h_fees.amount_usd,
+          last24hMethod: feeMetrics.last_24h_fees.calculation_method,
+          expectedDailyFees: feeMetrics.expected_24h_fees.amount_usd,
+          expectedMethod: feeMetrics.expected_24h_fees.calculation_method,
+          hourlyRate: feeMetrics.expected_24h_fees.hourly_rate,
+          efficiency: feeMetrics.performance_metrics.efficiency_percentage,
+          dataQuality: feeMetrics.performance_metrics.data_quality_score
+        });
+
+        return {
+          expectedDailyFees: Math.max(0, feeMetrics.expected_24h_fees.amount_usd),
+          last24hFees: Math.max(0, feeMetrics.last_24h_fees.amount_usd),
+          totalPortfolio: summary.total_value, // Use REAL current portfolio value
+          uncollectedFees: summary.total_fees,  // Use REAL current uncollected fees
+          performanceMetrics: {
+            efficiency: feeMetrics.performance_metrics.efficiency_percentage,
+            rateStability: feeMetrics.performance_metrics.rate_stability,
+            dataQuality: feeMetrics.performance_metrics.data_quality_score,
+            hourlyRate: feeMetrics.expected_24h_fees.hourly_rate,
+            calculationMethod: feeMetrics.expected_24h_fees.calculation_method,
+            last24hMethod: feeMetrics.last_24h_fees.calculation_method
           }
-          
-          return sum + growth;
-        }, 0);
-      
-      console.log('✅ Using REAL fee data:', {
-        hourlyRate: overallHourlyRate,
-        expectedDaily: expectedDailyFees,
-        actual24h: last24hFees
-      });
-    } else {
-      // Fallback: estimate from LP position sizes
-      const lpValue = (summary.whirlpool_value || 0) + (summary.raydium_value || 0);
-      expectedDailyFees = lpValue * 0.0005; // 0.05% daily estimate
-      last24hFees = expectedDailyFees; // Use estimate
-
-      console.log('📊 Using estimated fee data (no API data):', {
-        lpValue,
-        estimatedDaily: expectedDailyFees
-      });
+        };
+      }
+    } catch (error) {
+      console.warn('Fee metrics API failed, falling back to legacy calculation:', error);
     }
+
+    // Fallback: estimate from LP position sizes (legacy method)
+      const lpValue = (summary.whirlpool_value || 0) + (summary.raydium_value || 0);
+    const estimatedDailyFees = lpValue * 0.0005; // 0.05% daily estimate
+
+    console.log('📊 Using estimated fee data (API failed):', {
+        lpValue,
+      estimatedDaily: estimatedDailyFees
+      });
 
     return {
-      expectedDailyFees: Math.max(0, expectedDailyFees),
-      last24hFees: Math.max(0, last24hFees),
-      totalPortfolio: summary.total_value, // Use REAL current portfolio value
-      uncollectedFees: summary.total_fees   // Use REAL current uncollected fees
+      expectedDailyFees: Math.max(0, estimatedDailyFees),
+      last24hFees: Math.max(0, estimatedDailyFees),
+      totalPortfolio: summary.total_value,
+      uncollectedFees: summary.total_fees,
+      performanceMetrics: {
+        efficiency: 100, // Assume 100% when using estimates
+        rateStability: 0.5, // Neutral stability
+        dataQuality: 25, // Low quality for estimates
+        hourlyRate: estimatedDailyFees / 24,
+        calculationMethod: 'estimated',
+        last24hMethod: 'estimated'
+      }
     };
   }, []);
-
-  const generateProportionalChainHistories = useCallback((
-    summary: PortfolioSummary, 
-    portfolioHistory: ChartDataPoint[], 
-    timeframe: string
-  ) => {
-    const chainValues = {
-      solana: (summary.token_value || 0) + (summary.whirlpool_value || 0) + 
-              (summary.raydium_value || 0) + (summary.marginfi_value || 0) + 
-              (summary.kamino_value || 0),
-      hyperliquid: summary.hyperliquid_value || 0,
-      evm: summary.evm_value || 0,
-      sui: summary.sui_total_value || 0,
-      cex: summary.cex_value || 0
-    };
-
-    const histories: Record<string, ChartDataPoint[]> = {};
-    const totalValue = summary.total_value;
-
-    if (portfolioHistory.length > 0 && totalValue > 0) {
-      // Create proportional histories based on real portfolio data
-      Object.entries(chainValues).forEach(([chain, currentValue]) => {
-        const proportion = currentValue / totalValue;
-        
-        histories[chain] = portfolioHistory.map(point => ({
-          timestamp: point.timestamp,
-          date: point.date,
-          value: Math.round(point.value * proportion)
-        }));
-      });
-    } else {
-      // Fallback: flat lines at current values
-      Object.entries(chainValues).forEach(([chain, currentValue]) => {
-        histories[chain] = generateFlatLineData(currentValue, timeframe);
-      });
-    }
-
-    return histories;
-  }, [generateFlatLineData]);
 
   const generateCurrentValueFallback = useCallback((): AnalyticsData => {
     if (!summaryData?.summary) {
@@ -302,7 +297,20 @@ export default function AnalyticsPage() {
         evmHistory: [],
         suiHistory: [],
         cexHistory: [],
-        keyMetrics: { expectedDailyFees: 0, last24hFees: 0, totalPortfolio: 0, uncollectedFees: 0 }
+        keyMetrics: { 
+          expectedDailyFees: 0, 
+          last24hFees: 0, 
+          totalPortfolio: 0, 
+          uncollectedFees: 0,
+          performanceMetrics: {
+            efficiency: 0,
+            rateStability: 0,
+            dataQuality: 0,
+            hourlyRate: 0,
+            calculationMethod: 'none',
+            last24hMethod: 'none'
+          }
+        }
       };
     }
 
@@ -328,7 +336,15 @@ export default function AnalyticsPage() {
         expectedDailyFees: estimatedDailyFees,
         last24hFees: estimatedDailyFees,
         totalPortfolio: summary.total_value,
-        uncollectedFees: summary.total_fees
+        uncollectedFees: summary.total_fees,
+        performanceMetrics: {
+          efficiency: 100,
+          rateStability: 0.5,
+          dataQuality: 25,
+          hourlyRate: estimatedDailyFees / 24,
+          calculationMethod: 'estimated',
+          last24hMethod: 'estimated'
+        }
       }
     };
   }, [summaryData, timeframe, generateFlatLineData]);
@@ -343,89 +359,260 @@ export default function AnalyticsPage() {
     setError(null);
 
     try {
-      console.log('🔄 Fetching real analytics data...');
+      console.log('🔄 Fetching real analytics data using correct aggregate values...');
       
-      // Get all wallets to find the main one
+      // Add minimum loading time to prevent flashing
+      const minLoadingTime = 1000; // 1 second minimum
+      const startTime = Date.now();
+      
+      // Get all wallets for reference
       const walletsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets`);
+      
+      if (!walletsResponse.ok) {
+        throw new Error(`Failed to fetch wallets: ${walletsResponse.status}`);
+      }
+      
       const wallets: WalletInfo[] = await walletsResponse.json();
       
       if (!wallets || wallets.length === 0) {
         throw new Error('No wallets found');
       }
 
-      // Get the main wallet (highest value)
+      // Get the main wallet (highest value) for historical data queries
       const mainWallet = wallets.reduce((prev: WalletInfo, current: WalletInfo) => 
         ((current.total_value_usd || 0) > (prev.total_value_usd || 0)) ? current : prev
       );
 
-      console.log(`📈 Using main wallet: ${mainWallet.address.slice(0, 8)}... (${mainWallet.label || 'Unnamed'})`);
-
-      // Fetch real data in parallel
-      const [historicalData, feeGrowthData] = await Promise.all([
-        getHistoricalData(mainWallet.address, timeframe).catch(err => {
-          console.warn('Historical data failed:', err);
-          return [];
-        }),
-        getFeeGrowthData(mainWallet.address, timeframe).catch(err => {
-          console.warn('Fee growth data failed:', err);
-          return { growth_data: [], overall_hourly_rate: 0 };
-        })
-      ]) as [HistoricalDataPoint[], FeeGrowthData];
-
-      console.log('📊 API Data received:', {
-        historicalPoints: Array.isArray(historicalData) ? historicalData.length : 0,
-        feeGrowthPoints: feeGrowthData?.growth_data?.length || 0,
-        overallHourlyRate: feeGrowthData?.overall_hourly_rate || 0
+      console.log(`📈 Using main wallet for historical data: ${mainWallet.address.slice(0, 8)}... (${mainWallet.label || 'Unnamed'})`);
+      console.log('✅ Portfolio summary data received:', {
+        totalValue: summaryData.summary.total_value,
+        solanaValue: (summaryData.summary.token_value || 0) + (summaryData.summary.whirlpool_value || 0) + (summaryData.summary.raydium_value || 0) + (summaryData.summary.marginfi_value || 0) + (summaryData.summary.kamino_value || 0),
+        hyperliquidValue: summaryData.summary.hyperliquid_value,
+        evmValue: summaryData.summary.evm_value,
+        suiValue: summaryData.summary.sui_total_value,
+        cexValue: summaryData.summary.cex_value,
+        totalFees: summaryData.summary.total_fees
       });
 
-      // Process real historical portfolio data
-      const portfolioHistory = processRealHistoricalData(historicalData, summaryData.summary, timeframe);
-      
-      // Process real fee growth data
-      const feeHistory = processRealFeeData(feeGrowthData?.growth_data || [], summaryData.summary, timeframe);
-      
-      // Calculate real metrics from actual API data
-      const keyMetrics = calculateRealFeeMetrics(
-        summaryData.summary,
-        feeGrowthData?.growth_data || [],
-        feeGrowthData?.overall_hourly_rate || 0
-      );
+      // Fetch data with Promise.allSettled for better error handling
+      const [portfolioHistoryData, feeGrowthData] = await Promise.allSettled([
+        // Use the main Solana wallet for portfolio history as it has the most comprehensive data
+        getPortfolioHistory(mainWallet.address, timeframe),
+        getFeeGrowthData(mainWallet.address, timeframe)
+      ]);
 
-      // Generate proportional chain histories based on real portfolio data
-      const chainHistories = generateProportionalChainHistories(summaryData.summary, portfolioHistory, timeframe);
+      // Handle portfolio history data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let processedPortfolioData: any = { portfolio_history: [], current_values: null, changes_24h: null };
+      if (portfolioHistoryData.status === 'fulfilled') {
+        // Cast because Promise.allSettled value is typed as unknown
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        processedPortfolioData = portfolioHistoryData.value as any;
+        console.log('✅ Portfolio history data loaded successfully');
+      } else {
+        console.warn('⚠️ Portfolio history failed, using fallback:', portfolioHistoryData.reason);
+      }
+
+      // Handle fee growth data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let processedFeeData: any = { growth_data: [], overall_hourly_rate: 0 };
+      if (feeGrowthData.status === 'fulfilled') {
+        // Cast because Promise.allSettled value is typed as unknown
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        processedFeeData = feeGrowthData.value as any;
+        console.log('✅ Fee growth data loaded successfully');
+      } else {
+        console.warn('⚠️ Fee growth failed, using fallback:', feeGrowthData.reason);
+      }
+
+      console.log('📊 API Data received:', {
+        portfolioHistoryPoints: processedPortfolioData?.portfolio_history?.length || 0,
+        feeGrowthPoints: processedFeeData?.growth_data?.length || 0,
+        overallHourlyRate: processedFeeData?.overall_hourly_rate || 0,
+        currentValues: processedPortfolioData?.current_values ? 'Available' : 'None'
+      });
+
+      // Process the actual portfolio history using REAL aggregate total value
+      const portfolioHistory = processRealHistoricalData(
+        processedPortfolioData?.portfolio_history || [], 
+        summaryData.summary,
+        timeframe
+      );
+      
+      // Generate chain-specific histories using EXACT values from aggregate summary
+      // These values are the REAL multi-chain aggregated amounts, not inflated
+      const actualSolanaValue = (summaryData.summary.token_value || 0) + 
+                               (summaryData.summary.whirlpool_value || 0) + 
+                               (summaryData.summary.raydium_value || 0) + 
+                               (summaryData.summary.marginfi_value || 0) + 
+                               (summaryData.summary.kamino_value || 0);
+                               
+      const actualHyperliquidValue = summaryData.summary.hyperliquid_value || 0; // Only base value, not staking
+      const actualEvmValue = summaryData.summary.evm_value || 0;
+      const actualSuiValue = summaryData.summary.sui_total_value || 0;
+      const actualCexValue = summaryData.summary.cex_value || 0;
+
+      const solanaHistory = processedPortfolioData?.portfolio_history?.length > 0
+        ? processedPortfolioData.portfolio_history
+            .filter((point: HistoricalDataPoint) => point.timestamp && point.timestamp !== 'Invalid Date')
+            .map((point: HistoricalDataPoint) => ({
+              timestamp: point.timestamp,
+              date: formatTimestamp(point.timestamp, timeframe),
+              // Use proportional scaling based on REAL current Solana proportion
+              value: Math.max(0, point.solana_total || 
+                (point.total_portfolio && summaryData.summary.total_value > 0 ? 
+                  point.total_portfolio * (actualSolanaValue / summaryData.summary.total_value) : 
+                  actualSolanaValue))
+            }))
+            .filter((point: ChartDataPoint) => point.date !== 'N/A')
+        : generateFlatLineData(actualSolanaValue, timeframe);
+
+      const hyperliquidHistory = processedPortfolioData?.portfolio_history?.length > 0
+        ? processedPortfolioData.portfolio_history
+            .filter((point: HistoricalDataPoint) => point.timestamp && point.timestamp !== 'Invalid Date')
+            .map((point: HistoricalDataPoint) => ({
+              timestamp: point.timestamp,
+              date: formatTimestamp(point.timestamp, timeframe),
+              // Use proportional scaling based on REAL current Hyperliquid proportion
+              value: Math.max(0, point.hyperliquid_total || 
+                (point.total_portfolio && summaryData.summary.total_value > 0 ? 
+                  point.total_portfolio * (actualHyperliquidValue / summaryData.summary.total_value) : 
+                  actualHyperliquidValue))
+            }))
+            .filter((point: ChartDataPoint) => point.date !== 'N/A')
+        : generateFlatLineData(actualHyperliquidValue, timeframe);
+
+      const evmHistory = processedPortfolioData?.portfolio_history?.length > 0
+        ? processedPortfolioData.portfolio_history
+            .filter((point: HistoricalDataPoint) => point.timestamp && point.timestamp !== 'Invalid Date')
+            .map((point: HistoricalDataPoint) => ({
+              timestamp: point.timestamp,
+              date: formatTimestamp(point.timestamp, timeframe),
+              // Use proportional scaling based on REAL current EVM proportion
+              value: Math.max(0, point.evm_total || 
+                (point.total_portfolio && summaryData.summary.total_value > 0 ? 
+                  point.total_portfolio * (actualEvmValue / summaryData.summary.total_value) : 
+                  actualEvmValue))
+            }))
+            .filter((point: ChartDataPoint) => point.date !== 'N/A')
+        : generateFlatLineData(actualEvmValue, timeframe);
+
+      const suiHistory = processedPortfolioData?.portfolio_history?.length > 0
+        ? processedPortfolioData.portfolio_history
+            .filter((point: HistoricalDataPoint) => point.timestamp && point.timestamp !== 'Invalid Date')
+            .map((point: HistoricalDataPoint) => ({
+              timestamp: point.timestamp,
+              date: formatTimestamp(point.timestamp, timeframe),
+              // Use proportional scaling based on REAL current Sui proportion
+              value: Math.max(0, point.sui_total || 
+                (point.total_portfolio && summaryData.summary.total_value > 0 ? 
+                  point.total_portfolio * (actualSuiValue / summaryData.summary.total_value) : 
+                  actualSuiValue))
+            }))
+            .filter((point: ChartDataPoint) => point.date !== 'N/A')
+        : generateFlatLineData(actualSuiValue, timeframe);
+
+      const cexHistory = processedPortfolioData?.portfolio_history?.length > 0
+        ? processedPortfolioData.portfolio_history
+            .filter((point: HistoricalDataPoint) => point.timestamp && point.timestamp !== 'Invalid Date')
+            .map((point: HistoricalDataPoint) => ({
+              timestamp: point.timestamp,
+              date: formatTimestamp(point.timestamp, timeframe),
+              value: Math.max(0, point.cex_total || actualCexValue)
+            }))
+            .filter((point: ChartDataPoint) => point.date !== 'N/A')
+        : generateFlatLineData(actualCexValue, timeframe);
+      
+      // Process real fee growth data with fallback
+      const feeHistory = processRealFeeData((processedFeeData as {growth_data: FeeGrowthPoint[]}).growth_data || [], summaryData.summary, timeframe);
+      
+      // Calculate real metrics with graceful fallback
+      let keyMetrics;
+      try {
+        keyMetrics = await calculateRealFeeMetrics(summaryData.summary, mainWallet.address);
+        console.log('✅ Fee metrics calculated successfully');
+      } catch (metricsError) {
+        console.warn('⚠️ Fee metrics calculation failed, using fallback:', metricsError);
+        keyMetrics = {
+          expectedDailyFees: summaryData.summary.total_fees * 0.1, // Rough estimate
+          last24hFees: summaryData.summary.total_fees * 0.1,
+          totalPortfolio: summaryData.summary.total_value,
+          uncollectedFees: summaryData.summary.total_fees,
+          performanceMetrics: {
+            efficiency: 100,
+            rateStability: 0.5,
+            dataQuality: 25,
+            hourlyRate: (summaryData.summary.total_fees * 0.1) / 24,
+            calculationMethod: 'fallback',
+            last24hMethod: 'fallback'
+          }
+        };
+      }
 
       const data: AnalyticsData = {
         totalPortfolioHistory: portfolioHistory,
         feeHistory: feeHistory,
-        solanaHistory: chainHistories.solana,
-        hyperliquidHistory: chainHistories.hyperliquid,
-        evmHistory: chainHistories.evm,
-        suiHistory: chainHistories.sui,
-        cexHistory: chainHistories.cex,
+        solanaHistory: solanaHistory,
+        hyperliquidHistory: hyperliquidHistory,
+        evmHistory: evmHistory,
+        suiHistory: suiHistory,
+        cexHistory: cexHistory,
         keyMetrics
       };
 
-      console.log('✅ Real analytics data prepared:', {
+      // Ensure minimum loading time to prevent flashing
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+      
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+
+      console.log('✅ Corrected multi-chain analytics data prepared:', {
         portfolioPoints: portfolioHistory.length,
+        portfolioCurrentValue: portfolioHistory[portfolioHistory.length - 1]?.value || 0,
+        solanaPoints: solanaHistory.length,
+        solanaCurrentValue: solanaHistory[solanaHistory.length - 1]?.value || 0,
+        hyperliquidPoints: hyperliquidHistory.length,
+        hyperliquidCurrentValue: hyperliquidHistory[hyperliquidHistory.length - 1]?.value || 0,
+        evmPoints: evmHistory.length,
+        evmCurrentValue: evmHistory[evmHistory.length - 1]?.value || 0,
+        suiPoints: suiHistory.length,
+        suiCurrentValue: suiHistory[suiHistory.length - 1]?.value || 0,
+        cexPoints: cexHistory.length,
+        cexCurrentValue: cexHistory[cexHistory.length - 1]?.value || 0,
         feePoints: feeHistory.length,
         expectedDailyFees: keyMetrics.expectedDailyFees,
         last24hFees: keyMetrics.last24hFees,
-        totalPortfolio: keyMetrics.totalPortfolio
+        totalPortfolio: keyMetrics.totalPortfolio,
+        uncollectedFees: keyMetrics.uncollectedFees
       });
 
       setAnalyticsData(data);
 
     } catch (err) {
-      console.error('❌ Error fetching real analytics data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch analytics data');
+      console.error('❌ Error fetching analytics data:', err);
       
-      // Fallback to current value data
+      // Set a more user-friendly error message
+      if (err instanceof Error) {
+        if (err.message.includes('fetch')) {
+          setError('Unable to connect to analytics service. Please check if the API server is running.');
+        } else {
+          setError(`Analytics error: ${err.message}`);
+        }
+      } else {
+        setError('Failed to load analytics data');
+      }
+      
+      // Still provide fallback data even on error
+      console.log('🔄 Providing fallback analytics data...');
       setAnalyticsData(generateCurrentValueFallback());
     } finally {
       setIsLoading(false);
     }
-  }, [summaryData, timeframe, processRealHistoricalData, processRealFeeData, calculateRealFeeMetrics, generateProportionalChainHistories, generateCurrentValueFallback]);
+  }, [summaryData, timeframe, processRealHistoricalData, processRealFeeData, calculateRealFeeMetrics, generateCurrentValueFallback, formatTimestamp, generateFlatLineData]);
 
+  // Simplified useEffect with stable dependencies
   useEffect(() => {
     fetchRealAnalyticsData();
   }, [fetchRealAnalyticsData]);
@@ -440,38 +627,39 @@ export default function AnalyticsPage() {
 
   // Chart.js configuration helpers
   const createChartData = (data: ChartDataPoint[], label: string, color: string, gradient = true) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    if (!data || data.length === 0) return { datasets: [] };
     
-    let backgroundGradient;
-    if (gradient && ctx) {
-      backgroundGradient = ctx.createLinearGradient(0, 0, 0, 400);
-      backgroundGradient.addColorStop(0, color + '20');
-      backgroundGradient.addColorStop(1, color + '05');
-    }
+    // Filter out any invalid data points
+    const validData = data.filter((point: ChartDataPoint) => 
+      point.date !== 'N/A' && 
+      !isNaN(point.value) && 
+      isFinite(point.value)
+    );
+    
+    if (validData.length === 0) return { datasets: [] };
 
     return {
-      labels: data.map(d => d.date),
-      datasets: [{
+      labels: validData.map(point => point.date),
+      datasets: [
+        {
         label,
-        data: data.map(d => d.value),
+          data: validData.map(point => point.value),
         borderColor: color,
-        backgroundColor: backgroundGradient || color + '10',
+          backgroundColor: gradient ? `${color}10` : 'transparent',
         borderWidth: 3,
         fill: gradient,
         tension: 0.4,
-        pointRadius: 4,
+          pointRadius: 0,
         pointHoverRadius: 6,
-        pointBackgroundColor: color,
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
         pointHoverBackgroundColor: color,
         pointHoverBorderColor: '#ffffff',
-        pointHoverBorderWidth: 3,
-      }]
+          pointHoverBorderWidth: 2,
+        }
+      ]
     };
   };
 
+  // Improved chart options for cleaner appearance
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -484,22 +672,27 @@ export default function AnalyticsPage() {
         display: false,
       },
       tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        titleColor: '#1f2937',
-        bodyColor: '#1f2937',
-        borderColor: '#e5e7eb',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#ffffff',
+        bodyColor: '#ffffff',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
         borderWidth: 1,
         cornerRadius: 8,
         displayColors: false,
         callbacks: {
-          label: function(context: { parsed: { y: number } }) {
-            return formatCurrency(context.parsed.y);
+          label: function(context: import('chart.js').TooltipItem<'line'>) {
+            const value = context.parsed.y;
+            return `$${value.toLocaleString(undefined, { 
+              minimumFractionDigits: 2, 
+              maximumFractionDigits: 2 
+            })}`;
           }
         }
       }
     },
     scales: {
       x: {
+        display: true,
         grid: {
           display: false,
         },
@@ -507,34 +700,32 @@ export default function AnalyticsPage() {
           color: '#6b7280',
           font: {
             size: 12,
-          }
+          },
+          maxTicksLimit: 8, // Limit number of ticks to prevent crowding
         }
       },
       y: {
+        display: true,
         grid: {
-          color: 'rgba(107, 114, 128, 0.1)',
+          color: 'rgba(75, 85, 99, 0.1)',
+          drawBorder: false,
         },
         ticks: {
           color: '#6b7280',
           font: {
             size: 12,
           },
-          callback: function(value: string | number) {
-            const numValue = typeof value === 'string' ? parseFloat(value) : value;
-            if (numValue >= 1000000) {
-              return `$${(numValue / 1000000).toFixed(1)}M`;
+          callback: function(tickValue: string | number) {
+            const value = typeof tickValue === 'string' ? parseFloat(tickValue) : tickValue;
+            if (value >= 1000000) {
+              return `$${(value / 1000000).toFixed(1)}M`;
+            } else if (value >= 1000) {
+              return `$${(value / 1000).toFixed(0)}K`;
             }
-            if (numValue >= 1000) {
-              return `$${(numValue / 1000).toFixed(1)}k`;
-            }
-            return `$${numValue}`;
+            return `$${value.toFixed(0)}`;
           }
         }
       }
-    },
-    animation: {
-      duration: 1000,
-      easing: 'easeInOutQuart' as const,
     }
   };
 

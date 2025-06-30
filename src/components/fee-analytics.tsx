@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useFeeCollections } from '@/hooks/use-fee-collections';
 import { usePortfolio } from '@/hooks/use-portfolio';
+import { getFeeMetrics, type FeeMetricsResponse } from '@/lib/api-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -20,9 +21,34 @@ export default function FeeAnalytics({ walletAddress }: FeeAnalyticsProps) {
   const [timeframe, setTimeframe] = useState<string>('24h');
   const [tokenMetadataMap, setTokenMetadataMap] = useState<Map<string, TokenMetadata>>(new Map());
   const [loadingTokens, setLoadingTokens] = useState<Set<string>>(new Set());
+  const [feeMetrics, setFeeMetrics] = useState<FeeMetricsResponse | null>(null);
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
+  const [metricsError, setMetricsError] = useState<string | null>(null);
   
   const { data: feeData, isLoading: isLoadingFees, isError: isErrorFees } = useFeeCollections(walletAddress, timeframe);
   const { data: portfolioData, isLoading: isLoadingPortfolio } = usePortfolio(walletAddress);
+
+  // Fetch enhanced fee metrics
+  useEffect(() => {
+    const fetchEnhancedMetrics = async () => {
+      if (!walletAddress) return;
+      
+      setIsLoadingMetrics(true);
+      setMetricsError(null);
+      
+      try {
+        const metrics = await getFeeMetrics(walletAddress, 'auto');
+        setFeeMetrics(metrics);
+      } catch (error) {
+        console.error('Failed to fetch enhanced fee metrics:', error);
+        setMetricsError(error instanceof Error ? error.message : 'Failed to load metrics');
+      } finally {
+        setIsLoadingMetrics(false);
+      }
+    };
+
+    fetchEnhancedMetrics();
+  }, [walletAddress]);
 
   // Extract unique token addresses from fee collection data
   const uniqueTokenAddresses = useMemo(() => {
@@ -255,6 +281,114 @@ export default function FeeAnalytics({ walletAddress }: FeeAnalyticsProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Enhanced Fee Metrics Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Enhanced Fee Analytics</span>
+            <Badge variant="outline" className="text-xs">
+              {feeMetrics?.calculation_details.selected_method || 'auto'}
+            </Badge>
+          </CardTitle>
+          <CardDescription>
+            Advanced fee calculations with multiple methodologies and performance metrics
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoadingMetrics ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={`metrics-skeleton-${i}`} className="h-20 w-full" />
+              ))}
+            </div>
+          ) : metricsError ? (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="text-red-800 font-medium">Enhanced Metrics Unavailable</div>
+              <div className="text-red-600 text-sm mt-1">
+                {metricsError}. Falling back to basic calculations.
+              </div>
+            </div>
+          ) : feeMetrics ? (
+            <div className="space-y-6">
+              {/* Main Metrics Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="text-sm font-medium text-blue-800">Last 24h Fees</div>
+                  <div className="text-2xl font-bold text-blue-900">
+                    {formatUsd(feeMetrics.last_24h_fees.amount_usd)}
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    {feeMetrics.last_24h_fees.calculation_method} ({feeMetrics.last_24h_fees.data_points_used} points)
+                  </div>
+                </div>
+
+                <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                  <div className="text-sm font-medium text-green-800">Expected 24h Fees</div>
+                  <div className="text-2xl font-bold text-green-900">
+                    {formatUsd(feeMetrics.expected_24h_fees.amount_usd)}
+                  </div>
+                  <div className="text-xs text-green-600 mt-1">
+                    ${feeMetrics.expected_24h_fees.hourly_rate.toFixed(4)}/hr ({feeMetrics.expected_24h_fees.calculation_method})
+                  </div>
+                </div>
+
+                <div className="p-4 bg-purple-50 border border-purple-200 rounded-md">
+                  <div className="text-sm font-medium text-purple-800">Performance Efficiency</div>
+                  <div className="text-2xl font-bold text-purple-900">
+                    {feeMetrics.performance_metrics.efficiency_percentage.toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-purple-600 mt-1">
+                    Actual vs Expected
+                  </div>
+                </div>
+
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-md">
+                  <div className="text-sm font-medium text-orange-800">Data Quality</div>
+                  <div className="text-2xl font-bold text-orange-900">
+                    {feeMetrics.performance_metrics.data_quality_score.toFixed(0)}%
+                  </div>
+                  <div className="text-xs text-orange-600 mt-1">
+                    {feeMetrics.calculation_details.hourly_rates_count} data points
+                  </div>
+                </div>
+              </div>
+
+              {/* Performance Indicators */}
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-md">
+                <div className="text-sm font-medium text-gray-800 mb-3">Performance Indicators</div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Rate Stability:</span>
+                    <span className="ml-2 font-medium">
+                      {(feeMetrics.performance_metrics.rate_stability * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Time Span:</span>
+                    <span className="ml-2 font-medium">
+                      {feeMetrics.calculation_details.total_time_span_hours.toFixed(1)} hours
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Method:</span>
+                    <span className="ml-2 font-medium">
+                      {feeMetrics.calculation_details.selected_method}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+              <div className="text-yellow-800 font-medium">No Enhanced Metrics Available</div>
+              <div className="text-yellow-600 text-sm mt-1">
+                Enhanced fee metrics require sufficient historical data.
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Tabs for detailed views */}
       <Tabs defaultValue="positions" className="w-full">

@@ -104,7 +104,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   ) : (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        {/* BTC Row */}
+        {/* BTC Row */} 
         <div className="col-span-2 text-center">
           <div className="text-lg font-bold bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent">
             {targetTokens?.btc_on_base_aave3 ? 
