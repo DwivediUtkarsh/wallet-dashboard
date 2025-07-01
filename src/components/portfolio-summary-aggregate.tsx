@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { formatPercent, formatDollarFixed } from "@/lib/utils";
 import { PortfolioSummaryData, LastFeeCollection } from "@/types/api";
 import { useTargetTokenHoldings, useLastFeeCollection } from "@/hooks/use-portfolio";
+import { usePPA24h } from "@/hooks/usePPA24h";
 import { 
   ChartBarIcon, 
   WalletIcon, 
@@ -47,6 +48,9 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     isLoading: boolean;
   };
 
+  // Use the new hook to get PPA data
+  const { data: ppaData, isLoading: isLoadingPPA } = usePPA24h();
+
   // Check if we have any value for different chains
   const hasHyperliquid = data.hyperliquid_summary && (data.summary.hyperliquid_value > 0);
   const hasEvm = data.evm_summary && data.evm_summary.total_value > 0;
@@ -65,13 +69,18 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
 
   // Hardcoded number of shares and calculate value per share
   const numberOfShares = 57888.67;
-  const hyperevmValue = 30710.40;
+  const hyperevmValue = 32120;
   const totalValueIncludingHyperevm = data.summary.total_value + hyperevmValue;
   const valuePerShare = totalValueIncludingHyperevm / numberOfShares;
 
   // Function to handle Hyperevm card click
   const handleHyperevmClick = () => {
     window.open('https://app.hyperbeat.org/hyperfolio/0xaA2A9901eC394dd8F69D8BF6ef4aE085246Dfe78', '_blank');
+  };
+
+  // Function to open the Google Sheet in a new tab
+  const handleSheetClick = () => {
+    window.open('https://docs.google.com/spreadsheets/d/1apfrsTan5mZqkuup9Sri6bNOwj_wXkbvtj8B-HV3KJU/edit?gid=564168042#gid=564168042', '_blank');
   };
 
   // Custom content for Shares Info widget (inverted font sizes)
@@ -197,7 +206,36 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     </div>
   );
 
-  // First line cards: Total Value, Shares Info, Token Holdings, Uncollected Fees
+  // Custom content for PPA widget
+  const ppaContent = isLoadingPPA || !ppaData ? (
+    <div className="space-y-3 animate-pulse">
+      <div className="h-6 bg-muted rounded" />
+      <div className="h-6 bg-muted rounded" />
+      <div className="h-6 bg-muted rounded" />
+    </div>
+  ) : (
+    <div className="grid grid-cols-2 gap-3 text-sm">
+      <div>
+        <p className="text-muted-foreground text-xs">APR</p>
+        <p className="font-medium">{ppaData.apr}</p>
+      </div>
+      <div>
+        <p className="text-muted-foreground text-xs">Total PnL</p>
+        <p className={`font-medium ${ppaData.totalPnl.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>{ppaData.totalPnl}</p>
+      </div>
+      <div>
+        <p className="text-muted-foreground text-xs">Funds Deployed</p>
+        <p className="font-medium">{ppaData.fundsDeployed}</p>
+      </div>
+      <div>
+        <p className="text-muted-foreground text-xs">24h PnL</p>
+        <p className={`font-medium ${ppaData.pnl24h.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>{ppaData.pnl24h}</p>
+      </div>
+      <div className="col-span-2 text-center text-xs text-muted-foreground">Tap to access detailed sheet</div>
+    </div>
+  );
+
+  // First line cards: Total Value, Token Holdings, PPA, Uncollected Fees
   const firstLineCards: SummaryCardProps[] = [
     {
       title: "Total Value",
@@ -208,15 +246,6 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
       bgGradient: "from-blue-500/10 to-cyan-500/10",
     },
     {
-      title: "Shares Info",
-      value: "", // Will use custom content
-      description: "",
-      icon: ShareIcon,
-      gradient: "from-amber-500 to-orange-500",
-      bgGradient: "from-amber-500/10 to-orange-500/10",
-      customContent: sharesInfoContent
-    },
-    {
       title: "Token Holdings",
       value: "", // Will use custom content
       description: "",
@@ -224,6 +253,17 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
       gradient: "from-indigo-500 to-purple-500",
       bgGradient: "from-indigo-500/10 to-purple-500/10",
       customContent: tokenHoldingsContent
+    },
+    {
+      title: "24 hrs PPA",
+      value: "", // custom
+      description: "Tap to access detailed sheet",
+      icon: ChartBarIcon,
+      gradient: "from-sky-500 to-blue-500",
+      bgGradient: "from-sky-500/10 to-blue-500/10",
+      customContent: ppaContent,
+      isClickable: true,
+      onClick: handleSheetClick,
     },
     {
       title: "Uncollected Fees",
@@ -314,6 +354,17 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
     isClickable: true,
     onClick: handleHyperevmClick
   });
+
+  // After Hyperevm card push, add Shares Info card moved
+  secondLineCards.push({
+    title: "Shares Info",
+    value: "", // use existing custom sharesInfoContent
+    description: "",
+    icon: ShareIcon,
+    gradient: "from-amber-500 to-orange-500",
+    bgGradient: "from-amber-500/10 to-orange-500/10",
+    customContent: sharesInfoContent
+  });
   
   return (
     <div className="space-y-6">
@@ -330,7 +381,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
         </Link>
       </div>
 
-      {/* First line: Total Value, Shares Info, Token Holdings, Uncollected Fees */}
+      {/* First line: Total Value, Token Holdings, PPA, Uncollected Fees */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {firstLineCards.map((card, index) => (
           <div

@@ -56,7 +56,11 @@ export default function HomePage() {
               </CardContent>
             </Card>
           ) : (
-            summaryData && <PortfolioSummaryAggregate data={summaryData} />
+            summaryData && (
+              <>
+                <PortfolioSummaryAggregate data={summaryData} />
+              </>
+            )
           )}
         </div>
 
