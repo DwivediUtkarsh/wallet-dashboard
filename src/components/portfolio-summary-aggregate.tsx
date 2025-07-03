@@ -4,6 +4,7 @@ import { formatPercent, formatDollarFixed } from "@/lib/utils";
 import { PortfolioSummaryData, LastFeeCollection } from "@/types/api";
 import { useTargetTokenHoldings, useLastFeeCollection } from "@/hooks/use-portfolio";
 import { usePPA24h } from "@/hooks/usePPA24h";
+import { useJitoSolQuote } from "@/hooks/useJitoSolQuote";
 import { 
   ChartBarIcon, 
   WalletIcon, 
@@ -50,6 +51,18 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
 
   // Use the new hook to get PPA data
   const { data: ppaData, isLoading: isLoadingPPA } = usePPA24h();
+
+  // Fetch a unit quote (1 JitoSOL) to derive SOL per Jito ratio, then scale by held amount
+  const jitoAmount = targetTokens?.jitosol_on_marginfi ?? 0;
+  const { data: jitoQuoteUnit } = useJitoSolQuote(1); // always quote for 1 JitoSOL
+  const jitoPerSolRatio = jitoQuoteUnit ? Number(jitoQuoteUnit.outAmount) / 1e9 : 0;
+  const jitoSolEquivalent = jitoPerSolRatio * jitoAmount;
+
+  // Debug logs – remove or comment out in production
+  if (typeof window !== 'undefined') {
+    console.debug('[JitoQuote] unit quote', jitoQuoteUnit);
+    console.debug('[JitoQuote] ratio', jitoPerSolRatio, 'held', jitoAmount, 'equiv', jitoSolEquivalent);
+  }
 
   // Check if we have any value for different chains
   const hasHyperliquid = data.hyperliquid_summary && (data.summary.hyperliquid_value > 0);
@@ -140,6 +153,14 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
                 maximumFractionDigits: 2 
               })} JitoSOL` : '0 JitoSOL'}
           </div>
+          {jitoAmount > 0 && (
+            <div className="text-xs text-muted-foreground">
+              ≈ {jitoSolEquivalent.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })} SOL
+            </div>
+          )}
           <div className="text-xs text-muted-foreground">
             ${targetTokens?.jitosol_value_usd?.toLocaleString('en-US', { 
               minimumFractionDigits: 0, 
@@ -239,7 +260,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   const firstLineCards: SummaryCardProps[] = [
     {
       title: "Total Value",
-      value: formatDollarFixed(data.summary.total_value + hyperevmValue),
+      value: formatDollarFixed(data.summary.total_value),
       description: "Complete portfolio value",
       icon: WalletIcon,
       gradient: "from-blue-500 to-cyan-500",
