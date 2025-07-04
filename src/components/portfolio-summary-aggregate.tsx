@@ -147,20 +147,18 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
         {/* JitoSOL and HYPE Row */}
         <div className="text-center">
           <div className="text-lg font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+            ≈ {jitoSolEquivalent.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })} SOL
+          </div>
+          <div className="text-xs text-muted-foreground">
             {targetTokens?.jitosol_on_marginfi ? 
               `${targetTokens.jitosol_on_marginfi.toLocaleString('en-US', { 
                 minimumFractionDigits: 2, 
                 maximumFractionDigits: 2 
               })} JitoSOL` : '0 JitoSOL'}
           </div>
-          {jitoAmount > 0 && (
-            <div className="text-xs text-muted-foreground">
-              ≈ {jitoSolEquivalent.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })} SOL
-            </div>
-          )}
           <div className="text-xs text-muted-foreground">
             ${targetTokens?.jitosol_value_usd?.toLocaleString('en-US', { 
               minimumFractionDigits: 0, 
