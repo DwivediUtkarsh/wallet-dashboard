@@ -49,7 +49,7 @@ export default function FeeGrowthChart({ walletAddress }: FeeGrowthChartProps) {
     const fetchFeeGrowthData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/fee-growth/${walletAddress}?timeframe=${timeframe}`);
+        const response = await fetch(`/api/fee-growth?wallet=${walletAddress}&timeframe=${timeframe}`);
         if (!response.ok) {
           throw new Error('Failed to fetch fee growth data');
         }

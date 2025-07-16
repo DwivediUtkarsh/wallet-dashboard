@@ -38,10 +38,10 @@ export async function GET(
       );
     }
     
-    console.log(`Forwarding request to: ${API_BASE_URL}/fee-growth/${wallet}?timeframe=${timeframe}`);
+    console.log(`Forwarding request to: ${API_BASE_URL}/fee-growth?wallet=${wallet}&timeframe=${timeframe}`);
     
     // Prepare API URL with parameters
-    let apiUrl = `${API_BASE_URL}/fee-growth/${wallet}?timeframe=${timeframe}`;
+    let apiUrl = `${API_BASE_URL}/fee-growth?wallet=${wallet}&timeframe=${timeframe}`;
     
     if (position) {
       apiUrl += `&position=${position}`;

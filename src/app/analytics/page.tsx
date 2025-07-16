@@ -82,6 +82,7 @@ interface AnalyticsData {
   keyMetrics: {
     expectedDailyFees: number;
     last24hFees: number;
+    last30dFees: number;
     totalPortfolio: number;
     uncollectedFees: number;
     performanceMetrics?: {
@@ -243,9 +244,23 @@ export default function AnalyticsPage() {
           dataQuality: feeMetrics.performance_metrics.data_quality_score
         });
 
+        // Fetch total collected fees over the last 30 days via fee-collections endpoint
+        let last30dFees = 0;
+        try {
+          const resp30 = await fetch(`/api/fee-collections/${mainWalletAddress}?timeframe=30d`);
+          if (resp30.ok) {
+            const data30 = await resp30.json();
+            last30dFees = data30?.summary?.total_collected_usd ?? 0;
+          }
+        } catch (err) {
+          console.warn('Failed to load 30d fee collections:', err);
+        }
+
         return {
           expectedDailyFees: Math.max(0, feeMetrics.expected_24h_fees.amount_usd),
           last24hFees: Math.max(0, feeMetrics.last_24h_fees.amount_usd),
+          // Fetch total collected fees over the last 30 days via fee-collections endpoint
+          last30dFees: Math.max(0, last30dFees),
           totalPortfolio: summary.total_value, // Use REAL current portfolio value
           uncollectedFees: summary.total_fees,  // Use REAL current uncollected fees
           performanceMetrics: {
@@ -274,6 +289,7 @@ export default function AnalyticsPage() {
     return {
       expectedDailyFees: Math.max(0, estimatedDailyFees),
       last24hFees: Math.max(0, estimatedDailyFees),
+      last30dFees: Math.max(0, estimatedDailyFees * 30), // Estimate for 30 days
       totalPortfolio: summary.total_value,
       uncollectedFees: summary.total_fees,
       performanceMetrics: {
@@ -300,6 +316,7 @@ export default function AnalyticsPage() {
         keyMetrics: { 
           expectedDailyFees: 0, 
           last24hFees: 0, 
+          last30dFees: 0, // Add last30dFees to fallback
           totalPortfolio: 0, 
           uncollectedFees: 0,
           performanceMetrics: {
@@ -335,6 +352,7 @@ export default function AnalyticsPage() {
       keyMetrics: {
         expectedDailyFees: estimatedDailyFees,
         last24hFees: estimatedDailyFees,
+        last30dFees: estimatedDailyFees * 30, // Add last30dFees to fallback
         totalPortfolio: summary.total_value,
         uncollectedFees: summary.total_fees,
         performanceMetrics: {
@@ -536,6 +554,7 @@ export default function AnalyticsPage() {
         keyMetrics = {
           expectedDailyFees: summaryData.summary.total_fees * 0.1, // Rough estimate
           last24hFees: summaryData.summary.total_fees * 0.1,
+          last30dFees: summaryData.summary.total_fees * 0.1 * 30, // Fallback for 30d
           totalPortfolio: summaryData.summary.total_value,
           uncollectedFees: summaryData.summary.total_fees,
           performanceMetrics: {
@@ -584,6 +603,7 @@ export default function AnalyticsPage() {
         feePoints: feeHistory.length,
         expectedDailyFees: keyMetrics.expectedDailyFees,
         last24hFees: keyMetrics.last24hFees,
+        last30dFees: keyMetrics.last30dFees, // Log last30dFees
         totalPortfolio: keyMetrics.totalPortfolio,
         uncollectedFees: keyMetrics.uncollectedFees
       });
@@ -819,7 +839,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-green-700">
@@ -873,6 +893,21 @@ export default function AnalyticsPage() {
                   {formatCurrency(analyticsData.keyMetrics.uncollectedFees)}
                 </div>
                 <p className="text-xs text-orange-600 mt-1">Ready to collect (live)</p>
+              </CardContent>
+            </Card>
+
+            {/* Card: Last 30D Fees Collected */}
+            <Card className="bg-gradient-to-r from-teal-50 to-green-50 border-teal-200">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-teal-700">
+                  Last 30D Fees Collected
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-teal-600">
+                  {formatCurrency(analyticsData.keyMetrics.last30dFees)}
+                </div>
+                <p className="text-xs text-teal-600 mt-1">📅 Collected over past 30 days</p>
               </CardContent>
             </Card>
           </div>
