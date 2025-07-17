@@ -81,7 +81,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   const totalFees = data.summary.total_fees + (data.sui_summary?.total_bluefin_fees || 0);
 
   // Hardcoded number of shares and calculate value per share
-  const numberOfShares = 57888.67;
+  const numberOfShares = 59755.46;
   const hyperevmValue = 32120;
   const totalValueIncludingHyperevm = data.summary.total_value + hyperevmValue;
   const valuePerShare = totalValueIncludingHyperevm / numberOfShares;

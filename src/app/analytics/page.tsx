@@ -414,8 +414,9 @@ export default function AnalyticsPage() {
 
       // Fetch data with Promise.allSettled for better error handling
       const [portfolioHistoryData, feeGrowthData] = await Promise.allSettled([
-        // Use the main Solana wallet for portfolio history as it has the most comprehensive data
-        getPortfolioHistory(mainWallet.address, timeframe),
+        // Use the aggregate snapshots table for overall historical values
+        getPortfolioHistory('aggregate', timeframe),
+        // Still use the main wallet address for fee growth since fees are wallet specific
         getFeeGrowthData(mainWallet.address, timeframe)
       ]);
 
@@ -737,12 +738,22 @@ export default function AnalyticsPage() {
           },
           callback: function(tickValue: string | number) {
             const value = typeof tickValue === 'string' ? parseFloat(tickValue) : tickValue;
-            if (value >= 1000000) {
-              return `$${(value / 1000000).toFixed(1)}M`;
-            } else if (value >= 1000) {
-              return `$${(value / 1000).toFixed(0)}K`;
+            if (value >= 1_000_000) {
+              return `$${(value / 1_000_000).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}M`;
             }
-            return `$${value.toFixed(0)}`;
+            if (value >= 1_000) {
+              return `$${(value / 1_000).toLocaleString('en-US', {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+              })}K`;
+            }
+            return `$${value.toLocaleString('en-US', {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}`;
           }
         }
       }
@@ -914,25 +925,6 @@ export default function AnalyticsPage() {
 
           {/* Main Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 1. Real Uncollected Fee Data */}
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  Real Uncollected Fees Over Time
-                </CardTitle>
-                <p className="text-sm text-gray-600">Actual uncollected fees from all LP positions (live data)</p>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <Line 
-                    data={createChartData(analyticsData.feeHistory, 'Uncollected Fees', '#10b981', true)}
-                    options={chartOptions}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
             {/* 2. Real Portfolio Value */}
             <Card className="shadow-lg">
               <CardHeader>
@@ -1006,25 +998,6 @@ export default function AnalyticsPage() {
                 <div className="h-64">
                   <Line 
                     data={createChartData(analyticsData.evmHistory, 'EVM Value', '#10b981', false)}
-                    options={chartOptions}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Sui */}
-            <Card className="shadow-lg border-orange-200">
-              <CardHeader>
-                <CardTitle className="text-orange-600 flex items-center gap-2">
-                  <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                  Sui Network
-                </CardTitle>
-                <p className="text-xs text-gray-600">SUI tokens + Bluefin + SuiLend</p>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64">
-                  <Line 
-                    data={createChartData(analyticsData.suiHistory, 'Sui Value', '#f59e0b', false)}
                     options={chartOptions}
                   />
                 </div>
