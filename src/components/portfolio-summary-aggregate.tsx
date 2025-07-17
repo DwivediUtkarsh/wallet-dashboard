@@ -83,7 +83,7 @@ export default function PortfolioSummaryAggregate({ data }: PortfolioSummaryAggr
   // Hardcoded number of shares and calculate value per share
   const numberOfShares = 59755.46;
   const hyperevmValue = 32120;
-  const totalValueIncludingHyperevm = data.summary.total_value + hyperevmValue;
+  const totalValueIncludingHyperevm = data.summary.total_value;
   const valuePerShare = totalValueIncludingHyperevm / numberOfShares;
 
   // Function to handle Hyperevm card click
